@@ -1,0 +1,6 @@
+# IDE files and dirs
+.idea
+Algorithms, Part I.iml
+
+# virtualenv
+venv
