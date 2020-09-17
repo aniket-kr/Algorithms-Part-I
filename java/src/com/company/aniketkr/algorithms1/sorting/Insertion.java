@@ -1,5 +1,8 @@
 package com.company.aniketkr.algorithms1.sorting;
 
+import static com.company.aniketkr.algorithms1.sorting.Sorter.checkIndex;
+import static com.company.aniketkr.algorithms1.sorting.Sorter.swap;
+
 import java.util.Comparator;
 
 /**
@@ -19,6 +22,11 @@ public final class Insertion {
    * @throws IllegalArgumentException If {@code arr} is {@code null}.
    */
   public static <T extends Comparable<T>> void sort(T[] arr) {
+    if (arr == null) {
+      throw new IllegalArgumentException("1st argument to sort() is null");
+    }
+
+    sort(arr, 0, arr.length);
   }
 
   /**
@@ -34,6 +42,21 @@ public final class Insertion {
    *                                   not in the range {@code [0, arr.length]}.
    */
   public static <T extends Comparable<T>> void sort(T[] arr, int fromIndex, int toIndex) {
+    if (arr == null) {
+      throw new IllegalArgumentException("1st argument to sort() is null");
+    }
+    checkIndex(arr, fromIndex);
+    checkIndex(arr, toIndex);
+
+    // sorting algo begins
+    for (int i = fromIndex + 1; i < toIndex; i++) {
+      for (int j = i - 1; j >= fromIndex; j--) {
+        if (arr[j].compareTo(arr[j + 1]) < 0) {
+          break;
+        }
+        swap(arr, j + 1, j);
+      }
+    }
   }
 
   /**
@@ -47,6 +70,11 @@ public final class Insertion {
    *                                  {@code null}.
    */
   public static <T> void sort(T[] arr, Comparator<T> comparator) {
+    if (arr == null) {
+      throw new IllegalArgumentException("1st argument to sort() is null");
+    }
+
+    sort(arr, comparator, 0, arr.length);
   }
 
   /**
@@ -65,5 +93,23 @@ public final class Insertion {
    *                                   not in the range {@code [0, arr.length]}.
    */
   public static <T> void sort(T[] arr, Comparator<T> comparator, int fromIndex, int toIndex) {
+    if (arr == null) {
+      throw new IllegalArgumentException("1st argument to sort() is null");
+    }
+    if (comparator == null) {
+      throw new IllegalArgumentException("2nd argument to sort() is null");
+    }
+    checkIndex(arr, fromIndex);
+    checkIndex(arr, toIndex);
+
+    // sorting algo begins
+    for (int i = fromIndex + 1; i < toIndex; i++) {
+      for (int j = i - 1; j >= fromIndex; j--) {
+        if (comparator.compare(arr[j], arr[j + 1]) < 0) {
+          break;
+        }
+        swap(arr, j + 1, j);
+      }
+    }
   }
 }
