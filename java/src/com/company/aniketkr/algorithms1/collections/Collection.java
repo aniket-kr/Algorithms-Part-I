@@ -14,5 +14,11 @@ public interface Collection<E> extends Iterable<E> {
 
   Iterator<E> iterator();
 
+  /* **************************************************************************
+   * Section: Object Methods
+   ************************************************************************** */
+
   boolean equals(Object obj);
+
+  String toString();
 }
