@@ -1,9 +1,9 @@
 package com.company.aniketkr.algorithms1.sorting;
 
-import java.util.Comparator;
-
 import static com.company.aniketkr.algorithms1.sorting.Sorter.checkIndex;
 import static com.company.aniketkr.algorithms1.sorting.Sorter.swap;
+
+import java.util.Comparator;
 
 /**
  * Sorts the array using bubble sort. Uses time proportional to <code>&theta;(n<sup>2</sup>)</code>
