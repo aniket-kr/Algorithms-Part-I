@@ -17,10 +17,22 @@ import java.util.Iterator;
 public final class ArrayList<E> implements List<E> {
   private static final int INIT_CAPACITY = 4;
 
+  /**
+   * Initialize and return a new ArrayList object. Default
+   * capacity is {@value INIT_CAPACITY}.
+   */
   public ArrayList() {
     this(INIT_CAPACITY);
   }
 
+  /**
+   * Initialize and return a new ArrayList object, ensuring capacity for
+   * {@code capacity} objects.
+   *
+   * @param capacity The number of elements that internal array should be able to
+   *                 accommodate without needing to resize.
+   * @throws NegativeArraySizeException If {@code capacity} is negative.
+   */
   public ArrayList(int capacity) {
   }
 
