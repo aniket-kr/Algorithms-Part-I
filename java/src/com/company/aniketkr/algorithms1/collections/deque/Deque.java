@@ -3,6 +3,7 @@ package com.company.aniketkr.algorithms1.collections.deque;
 import com.company.aniketkr.algorithms1.collections.Collection;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * A deque (pronounced "deck") is a collection of objects such that we can access and
@@ -19,6 +20,17 @@ import java.util.Iterator;
  * @author Aniket Kumar
  */
 public final class Deque<E> implements Collection<E> {
+  private Node front;
+  private Node back;
+  private int length = 0;
+
+  /**
+   * Instantiate and return a new {@link Deque} object.
+   */
+  public Deque() {
+    front = null;
+    back = null;
+  }
 
   /* **************************************************************************
    * Section: Object Methods
@@ -61,7 +73,7 @@ public final class Deque<E> implements Collection<E> {
    */
   @Override
   public Iterator<E> iterator() {
-    return null;
+    return new DoublyLinkedListIterator(front, true);
   }
 
   /**
@@ -70,7 +82,7 @@ public final class Deque<E> implements Collection<E> {
    * @return An iterable.
    */
   public Iterable<E> reverse() {
-    return null;
+    return () -> new DoublyLinkedListIterator(back, false);
   }
 
   /* **************************************************************************
@@ -84,7 +96,7 @@ public final class Deque<E> implements Collection<E> {
    */
   @Override
   public int size() {
-    return 0;
+    return length;
   }
 
   /**
@@ -94,7 +106,7 @@ public final class Deque<E> implements Collection<E> {
    */
   @Override
   public boolean isEmpty() {
-    return false;
+    return length == 0;
   }
 
   /**
@@ -106,6 +118,13 @@ public final class Deque<E> implements Collection<E> {
    * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
   public boolean contains(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to contains() is null");
+
+    for (E dequeElmt : this) {
+      if (dequeElmt.equals(elmt)) {
+        return true;
+      }
+    }
     return false;
   }
 
@@ -114,7 +133,9 @@ public final class Deque<E> implements Collection<E> {
    */
   @Override
   public void clear() {
-
+    length = 0;
+    front = null;
+    back = null;
   }
 
   /**
@@ -124,7 +145,12 @@ public final class Deque<E> implements Collection<E> {
    */
   @Override
   public Deque<E> copy() {
-    return null;
+    Deque<E> cp = new Deque<>();
+    for (E elmt : this) {
+      cp.addBack(elmt);
+    }
+
+    return cp;
   }
 
   /* **************************************************************************
@@ -138,6 +164,20 @@ public final class Deque<E> implements Collection<E> {
    * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
   public void addFront(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to addFront() is null");
+
+    Node node = new Node();
+    node.elmt = elmt;
+
+    if (isEmpty()) {
+      front = node;
+      back = node;
+    } else {
+      front.prev = node;
+      node.next = front;
+      front = node;
+    }
+    length++;
   }
 
   /**
@@ -147,26 +187,68 @@ public final class Deque<E> implements Collection<E> {
    * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
   public void addBack(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to addBack() is null");
+
+    Node node = new Node();
+    node.elmt = elmt;
+
+    if (isEmpty()) {
+      back = node;
+      front = node;
+    } else {
+      back.next = node;
+      node.prev = back;
+      back = node;
+    }
+    length++;
   }
 
   /**
    * Delete and return the element at the <em>front</em> of the deque.
    *
    * @return The deleted element that was at the <em>front</em>.
-   * @throws java.util.NoSuchElementException If deque is empty (underflow).
+   * @throws NoSuchElementException If deque is empty (underflow).
    */
   public E delFront() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("Underflow: can't delete from empty deque");
+
+    E elmt = front.elmt;
+
+    if (size() == 1) {
+      front = null;
+      back = null;
+    } else {
+      front = front.next;
+      front.prev.next = null;
+      front.prev = null;
+    }
+    length--;
+
+    return elmt;
   }
 
   /**
    * Delete and return the element at the <em>back</em> of the deque.
    *
    * @return The deleted element that was at the <em>back</em>.
-   * @throws java.util.NoSuchElementException If deque is empty (underflow).
+   * @throws NoSuchElementException If deque is empty (underflow).
    */
   public E delBack() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("Underflow: can't delete from empty deque");
+
+    E elmt = back.elmt;
+
+    if (size() == 1) {
+      back = null;
+      front = null;
+    } else {
+      back = back.prev;
+      back.next.prev = null;
+      back.next = null;
+    }
+    length--;
+
+    return elmt;
   }
 
   /**
@@ -174,10 +256,12 @@ public final class Deque<E> implements Collection<E> {
    * deleting it.
    *
    * @return The element that is at <em>front</em> of the deque.
-   * @throws java.util.NoSuchElementException If deque is empty (underflow).
+   * @throws NoSuchElementException If deque is empty (underflow).
    */
   public E peekFront() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("Underflow: can't peek at empty deque");
+
+    return front.elmt;
   }
 
   /**
@@ -185,9 +269,81 @@ public final class Deque<E> implements Collection<E> {
    * deleting it.
    *
    * @return The element that is at <em>back</em> of the deque.
-   * @throws java.util.NoSuchElementException If deque is empty (underflow).
+   * @throws NoSuchElementException If deque is empty (underflow).
    */
   public E peekBack() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("Underflow: can't peek at empty deque");
+
+    return back.elmt;
+  }
+
+  /* **************************************************************************
+   * Section: Helper Classes and Methods
+   ************************************************************************** */
+
+  /**
+   * Represents a node in a doubly linked list. Holds the element and a reference to
+   * the prev and next nodes.
+   */
+  private class Node {
+    E elmt;
+    Node prev = null;
+    Node next = null;
+  }
+
+  /**
+   * An iterator class that supports iteration over a doubly linked list from
+   * either direction.
+   */
+  private class DoublyLinkedListIterator implements Iterator<E> {
+    private final boolean frontToBack;
+    private Node current;
+
+    /**
+     * Instantiate and return a new {@link DoublyLinkedListIterator} object.
+     *
+     * @param startNode   The node to start iterating from.
+     * @param frontToBack Pass {@code true} if the iterator should move <em>front</em>
+     *                    from {@code startNode}, {@code false} for <em>backwards</em>.
+     */
+    private DoublyLinkedListIterator(Node startNode, boolean frontToBack) {
+      this.frontToBack = frontToBack;
+      this.current = startNode;
+    }
+
+    /**
+     * Does the iterator have any more elements to produce?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code false} otherwise.
+     */
+    @Override
+    public boolean hasNext() {
+      return current != null;
+    }
+
+    /**
+     * Gets the next element produced by the iterator.
+     *
+     * @return The next element.
+     * @throws NoSuchElementException If the iterator has been depleted.
+     */
+    @Override
+    public E next() {
+      if (!hasNext()) throw new NoSuchElementException("iterator depleted");
+
+      E elmt = current.elmt;
+      current = frontToBack ? current.next : current.prev;
+      return elmt;
+    }
+
+    /**
+     * Throws UOE. {@code remove()} is not supported.
+     *
+     * @throws UnsupportedOperationException Always, 100% of the time it is called.
+     */
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException("remove() is not supported");
+    }
   }
 }
