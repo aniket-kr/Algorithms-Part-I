@@ -105,6 +105,19 @@ public final class ArrayStack<E> implements Stack<E> {
   }
 
   /**
+   * Does {@code elmt} exist in the stack?
+   *
+   * @param elmt The element to check for.
+   * @return {@code true} if {@code elmt} exists in the stack, {@code false}
+   *     otherwise.
+   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   */
+  @Override
+  public boolean contains(E elmt) {
+    return false;
+  }
+
+  /**
    * Clear the stack of all its elements. Set it to its instantiated state.
    */
   @Override

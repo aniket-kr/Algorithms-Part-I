@@ -98,6 +98,18 @@ public final class Deque<E> implements Collection<E> {
   }
 
   /**
+   * Does {@code elmt} exist in the deque?
+   *
+   * @param elmt The element to check for.
+   * @return {@code true} if {@code elmt} exists in the deque, {@code false}
+   *     otherwise.
+   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   */
+  public boolean contains(E elmt) {
+    return false;
+  }
+
+  /**
    * Clear the deque of all its elements. Set it to its instantiated state.
    */
   @Override

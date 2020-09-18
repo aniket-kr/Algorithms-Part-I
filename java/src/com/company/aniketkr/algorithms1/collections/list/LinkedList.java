@@ -85,6 +85,19 @@ public final class LinkedList<E> implements List<E> {
     return false;
   }
 
+
+  /**
+   * Does the element {@code elmt} exist in the list?
+   *
+   * @param elmt The element.
+   * @return {@code true} if {@code elmt} exists in the list, {@code false} otherwise.
+   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   */
+  @Override
+  public boolean contains(E elmt) {
+    return false;
+  }
+
   /**
    * Clear the list of all its elements. Set it to its instantiated state.
    */
@@ -106,18 +119,6 @@ public final class LinkedList<E> implements List<E> {
   /* **************************************************************************
    * Section: List Methods
    ************************************************************************** */
-
-  /**
-   * Does the element {@code elmt} exist in the list?
-   *
-   * @param elmt The element.
-   * @return {@code true} if {@code elmt} exists in the list, {@code false} otherwise.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
-   */
-  @Override
-  public boolean contains(E elmt) {
-    return false;
-  }
 
   /**
    * Add the given element {@code elmt} to the end of the list.

@@ -89,6 +89,19 @@ public class MinPQ<K> implements Collection<K> {
   }
 
   /**
+   * Does {@code key} exist in the priority queue?
+   *
+   * @param key The key to check for.
+   * @return {@code true} if {@code key} exists in the priority queue, {@code false}
+   *     otherwise.
+   * @throws IllegalArgumentException If {@code key} is {@code null}.
+   */
+  @Override
+  public boolean contains(K key) {
+    return false;
+  }
+
+  /**
    * Clear the priority queue of all its elements. Set it to its instantiated state.
    */
   @Override

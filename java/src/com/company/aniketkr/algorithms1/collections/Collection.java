@@ -35,6 +35,16 @@ public interface Collection<E> extends Iterable<E> {
   void clear();
 
   /**
+   * Does {@code elmt} exist in the collection?
+   *
+   * @param elmt The element to check for.
+   * @return {@code true} if {@code elmt} exists in the collection, {@code false}
+   *     otherwise.
+   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   */
+  boolean contains(E elmt);
+
+  /**
    * Get a shallow copy of the collection.
    *
    * @return A new collection.

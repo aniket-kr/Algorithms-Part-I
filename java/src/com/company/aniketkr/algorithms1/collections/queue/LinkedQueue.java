@@ -88,6 +88,19 @@ public final class LinkedQueue<E> implements Queue<E> {
   }
 
   /**
+   * Does {@code elmt} exist in the queue?
+   *
+   * @param elmt The element to check for.
+   * @return {@code true} if {@code elmt} exists in the queue, {@code false}
+   *     otherwise.
+   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   */
+  @Override
+  public boolean contains(E elmt) {
+    return false;
+  }
+  
+  /**
    * Clear the queue of all its elements. Set it to its instantiated state.
    */
   @Override
