@@ -6,8 +6,7 @@ import java.util.Iterator;
 /**
  * Implements the {@link List} interface using an internal resizing array.
  * The internal array starts off with initial capacity {@value INIT_CAPACITY} if
- * nothing is explicitly specified. In worst case, <em>adding</em> and
- * <em>inserting</em> elements can take <code>&theta;(n<sup>2</sup>)</code> time.
+ * nothing is explicitly specified.
  *
  * <p>This array is guaranteed to be between 25% to 100% full at all times. The
  * size of the array increases (or decreases) by a factor of 2.</p>
