@@ -42,14 +42,28 @@ public final class Deque<E> implements Collection<E> {
    * are equal.
    *
    * @param obj The other object to check for equality.
-   * @return {@code true} if {@code obj} is semantically equal to this deque,
-   *     {@code false} otherwise.
-   * @implSpec As it currently stands, if two deque objects are empty, the {@code equals}
+   * @return {@code true} if {@code obj} is a subclass of {@link Deque} and all the elements
+   *     in the deque are equal; {@code false} otherwise.
+   * @implNote As it currently stands, if two deque objects are empty, the {@code equals()}
    *     method will always return {@code true}. This happens as no elements are available to
    *     compare.
    */
   public boolean equals(Object obj) {
-    return false;
+    if (obj == this)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof Deque))    return false;
+    Deque<?> that = (Deque<?>) obj;
+    if (this.size() != that.size()) return false;
+
+    // compare each element
+    Iterator<E> itor1 = this.iterator();
+    Iterator<?> itor2 = that.iterator();
+    while (itor1.hasNext()) {
+      if (!itor1.next().equals(itor2.next())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -58,7 +72,16 @@ public final class Deque<E> implements Collection<E> {
    * @return A string.
    */
   public String toString() {
-    return null;
+    if (isEmpty()) return "(F[ ]B)";
+
+    StringBuilder sb = new StringBuilder("(F[ ");
+    for (E elmt : this) {
+      sb.append(elmt);
+      sb.append(", ");
+    }
+    sb.setLength(sb.length() - 2);
+    sb.append(" ]B)");
+    return sb.toString();
   }
 
   /* **************************************************************************
@@ -339,7 +362,7 @@ public final class Deque<E> implements Collection<E> {
     /**
      * Throws UOE. {@code remove()} is not supported.
      *
-     * @throws UnsupportedOperationException Always, 100% of the time it is called.
+     * @throws UnsupportedOperationException Always.
      */
     @Override
     public void remove() {
