@@ -12,11 +12,16 @@ import java.util.NoSuchElementException;
  * @author Aniket Kumar
  */
 public final class LinkedQueue<E> implements Queue<E> {
+  private Node head;
+  private Node tail;
+  private int length = 0;
 
   /**
    * Initialize and return a new LinkedQueue object.
    */
   public LinkedQueue() {
+    head = null;
+    tail = null;
   }
 
   /* **************************************************************************
@@ -36,7 +41,20 @@ public final class LinkedQueue<E> implements Queue<E> {
    *     compare.
    */
   public boolean equals(Object obj) {
-    return false;
+    if (this == obj)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof Queue))    return false;
+    Queue<?> that = (Queue<?>) obj;
+    if (this.size() != that.size()) return false;
+
+    // compare all elements
+    Iterator<?> itor = that.iterator();
+    for (E elmt : this) {
+      if (!elmt.equals(itor.next())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -45,7 +63,14 @@ public final class LinkedQueue<E> implements Queue<E> {
    * @return A string.
    */
   public String toString() {
-    return null;
+    if (isEmpty()) return "LinkedQueue[0] [ ]";
+
+    StringBuilder sb = new StringBuilder("LinkedQueue[").append(size()).append("] [ ");
+    for (E elmt : this) {
+      sb.append(elmt).append(", ");
+    }
+    sb.setLength(sb.length() - 2);
+    return sb.append(" ]").toString();
   }
 
   /* **************************************************************************
@@ -60,7 +85,7 @@ public final class LinkedQueue<E> implements Queue<E> {
    */
   @Override
   public Iterator<E> iterator() {
-    return null;
+    return new NodeIterator();
   }
 
   /* **************************************************************************
@@ -74,7 +99,7 @@ public final class LinkedQueue<E> implements Queue<E> {
    */
   @Override
   public int size() {
-    return 0;
+    return length;
   }
 
   /**
@@ -84,7 +109,7 @@ public final class LinkedQueue<E> implements Queue<E> {
    */
   @Override
   public boolean isEmpty() {
-    return false;
+    return size() == 0;
   }
 
   /**
@@ -97,6 +122,13 @@ public final class LinkedQueue<E> implements Queue<E> {
    */
   @Override
   public boolean contains(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to contains() is null");
+
+    for (E queueElmt : this) {
+      if (queueElmt.equals(elmt)) {
+        return true;
+      }
+    }
     return false;
   }
   
@@ -105,7 +137,9 @@ public final class LinkedQueue<E> implements Queue<E> {
    */
   @Override
   public void clear() {
-
+    head = null;
+    tail = null;
+    length = 0;
   }
 
   /**
@@ -115,7 +149,12 @@ public final class LinkedQueue<E> implements Queue<E> {
    */
   @Override
   public Queue<E> copy() {
-    return null;
+    Queue<E> cp = new LinkedQueue<>();
+    for (E elmt : this) {
+      cp.enqueue(elmt);
+    }
+
+    return cp;
   }
 
   /* **************************************************************************
@@ -130,7 +169,17 @@ public final class LinkedQueue<E> implements Queue<E> {
    */
   @Override
   public void enqueue(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to enqueue() is null");
 
+    Node node = new Node(elmt);
+    if (isEmpty()) {
+      head = node;
+      tail = node;
+    } else {
+      head.next = node;
+      head = node;
+    }
+    length++;
   }
 
   /**
@@ -141,7 +190,19 @@ public final class LinkedQueue<E> implements Queue<E> {
    */
   @Override
   public E dequeue() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("Underflow: can't dequeue() from empty queue");
+
+    E elmt = tail.elmt;
+
+    if (size() == 1) {
+      tail = null;
+      head = null;
+    } else {
+      tail = tail.next;
+    }
+    length--;
+
+    return elmt;
   }
 
   /**
@@ -152,6 +213,44 @@ public final class LinkedQueue<E> implements Queue<E> {
    */
   @Override
   public E peek() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("Underflow: can't peek() at empty queue");
+
+    return tail.elmt;
+  }
+
+  /* **************************************************************************
+   * Section: Helper Methods and Classes
+   ************************************************************************** */
+
+  private class Node {
+    E elmt;
+    Node next = null;
+
+    Node(E elmt) {
+      this.elmt = elmt;
+    }
+  }
+
+  private class NodeIterator implements Iterator<E> {
+    private Node current = tail;
+
+    @Override
+    public boolean hasNext() {
+      return current != null;
+    }
+
+    @Override
+    public E next() {
+      if (!hasNext()) throw new NoSuchElementException("iterator depleted");
+
+      E elmt = current.elmt;
+      current = current.next;
+      return elmt;
+    }
+
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException("remove() not supported");
+    }
   }
 }
