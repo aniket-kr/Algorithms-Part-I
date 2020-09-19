@@ -3,6 +3,8 @@ package com.company.aniketkr.algorithms1.collections.queue;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+// FIXME: proofread the docs
+
 /**
  * Implements the {@link Queue} interface using a singly linked list. The
  * "nodes" to the list are added/removed as elements are <em>enqueued/dequeued</em>
