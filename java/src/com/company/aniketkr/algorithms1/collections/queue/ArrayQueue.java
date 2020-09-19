@@ -1,12 +1,11 @@
 package com.company.aniketkr.algorithms1.collections.queue;
 
-import com.company.aniketkr.algorithms1.collections.stack.Stack;
-
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * Implements the {@link Stack} interface using an internal resizing array. The
+ * Implements the {@link Queue} interface using an internal resizing array. The
  * internal array starts off with initial capacity {@value INIT_CAPACITY} if nothing
  * is explicitly specified.
  *
@@ -18,6 +17,9 @@ import java.util.NoSuchElementException;
  */
 public final class ArrayQueue<E> implements Queue<E> {
   private static final int INIT_CAPACITY = 8;
+  private E[] arr;
+  private int head = 0;
+  private int tail = 0;
 
   /**
    * Initialize and return a new ArrayQueue object.
@@ -35,7 +37,27 @@ public final class ArrayQueue<E> implements Queue<E> {
    *                 accommodate without needing to resize.
    * @throws NegativeArraySizeException If {@code capacity} is negative.
    */
+  @SuppressWarnings("unchecked")
   public ArrayQueue(int capacity) {
+    arr = (E[]) new Object[capacity];
+  }
+
+  private int head() {
+    return (head < tail) ? arr.length + head : head;
+  }
+
+  private void incHead() {
+    // assume that arr always has sufficient space
+    head = (head + 1) % arr.length;
+  }
+
+  private int tail() {
+    return tail;
+  }
+
+  private void incTail() {
+    // assume that arr always has sufficient space
+    tail = (tail + 1) % arr.length;
   }
 
   /* **************************************************************************
@@ -55,7 +77,20 @@ public final class ArrayQueue<E> implements Queue<E> {
    *     to compare.
    */
   public boolean equals(Object obj) {
-    return false;
+    if (this == obj)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof Queue))    return false;
+    Queue<?> that = (Queue<?>) obj;
+    if (this.size() != that.size()) return false;
+
+    // compare all elements
+    Iterator<?> itor = that.iterator();
+    for (E elmt : this) {
+      if (!elmt.equals(itor.next())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -64,7 +99,14 @@ public final class ArrayQueue<E> implements Queue<E> {
    * @return A string.
    */
   public String toString() {
-    return null;
+    if (isEmpty()) return "ArrayQueue[0] [ ]";
+
+    StringBuilder sb = new StringBuilder("ArrayQueue[").append(size()).append("] [ ");
+    for (E elmt : this) {
+      sb.append(elmt).append(", ");
+    }
+    sb.setLength(sb.length() - 2);
+    return sb.append(" ]").toString();
   }
 
   /* **************************************************************************
@@ -79,7 +121,7 @@ public final class ArrayQueue<E> implements Queue<E> {
    */
   @Override
   public Iterator<E> iterator() {
-    return null;
+    return new WrapArrayIterator(head, tail);
   }
 
   /* **************************************************************************
@@ -93,7 +135,7 @@ public final class ArrayQueue<E> implements Queue<E> {
    */
   @Override
   public int size() {
-    return 0;
+    return head() - tail();
   }
 
   /**
@@ -103,7 +145,7 @@ public final class ArrayQueue<E> implements Queue<E> {
    */
   @Override
   public boolean isEmpty() {
-    return false;
+    return size() == 0;
   }
 
   /**
@@ -116,6 +158,13 @@ public final class ArrayQueue<E> implements Queue<E> {
    */
   @Override
   public boolean contains(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to contains() is null");
+
+    for (E queueElmt : this) {
+      if (queueElmt.equals(elmt)) {
+        return true;
+      }
+    }
     return false;
   }
 
@@ -123,8 +172,11 @@ public final class ArrayQueue<E> implements Queue<E> {
    * Clear the queue of all its elements. Set it to its instantiated state.
    */
   @Override
+  @SuppressWarnings("unchecked")
   public void clear() {
-
+    arr = (E[]) new Object[INIT_CAPACITY];
+    head = 0;
+    tail = 0;
   }
 
   /**
@@ -134,7 +186,12 @@ public final class ArrayQueue<E> implements Queue<E> {
    */
   @Override
   public Queue<E> copy() {
-    return null;
+    ArrayQueue<E> cp = new ArrayQueue<>(size() * 2);
+    copyOver(cp.arr);
+    cp.head = size();
+    cp.tail = 0;
+
+    return cp;
   }
 
   /* **************************************************************************
@@ -149,7 +206,13 @@ public final class ArrayQueue<E> implements Queue<E> {
    */
   @Override
   public void enqueue(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to enqueue() is null");
+    if (size() + 1 == arr.length) {
+      resize(arr.length * 2);
+    }
 
+    arr[head] = elmt;
+    incHead();
   }
 
   /**
@@ -160,7 +223,16 @@ public final class ArrayQueue<E> implements Queue<E> {
    */
   @Override
   public E dequeue() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("underflow: can't dequeue() from empty queue");
+    if (size() == arr.length / 4) {
+      resize(arr.length / 2);
+    }
+
+    E elmt = arr[tail];
+    arr[tail] = null;
+    incTail();
+
+    return elmt;
   }
 
   /**
@@ -171,6 +243,65 @@ public final class ArrayQueue<E> implements Queue<E> {
    */
   @Override
   public E peek() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("underflow: can't peek() at empty queue");
+
+    return arr[tail];
+  }
+
+  /* **************************************************************************
+   * Section: Helper Methods and Classes
+   ************************************************************************** */
+
+  @SuppressWarnings("unchecked")
+  private void resize(int newSize) {
+    E[] newArr = (E[]) new Object[newSize];
+    copyOver(newArr);
+
+    head = size();  // head MUST be computed before tail
+    tail = 0;
+    arr = newArr;
+  }
+
+  private void copyOver(Object[] toArr) {
+    if (head > tail) {
+      System.arraycopy(arr, tail, toArr, 0, size());
+    } else {
+      System.arraycopy(arr, tail, toArr, 0, arr.length - tail);
+      System.arraycopy(arr, 0, toArr, arr.length - tail, head);
+    }
+  }
+
+  private class WrapArrayIterator implements Iterator<E> {
+    private boolean resetToStart;
+    private int current;
+    private final int stop;
+
+    private WrapArrayIterator(int trueHead, int trueTail) {
+      resetToStart = trueHead < trueTail;
+      current = trueTail;
+      stop = trueHead;
+    }
+
+    @Override
+    public boolean hasNext() {
+      if (resetToStart && current == arr.length) {
+        current = 0;
+        resetToStart = false;
+      }
+
+      return resetToStart || current < stop;
+    }
+
+    @Override
+    public E next() {
+      if (!hasNext()) throw new NoSuchElementException("iterator depleted");
+
+      return arr[current++];
+    }
+
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException("remove() not supported");
+    }
   }
 }
