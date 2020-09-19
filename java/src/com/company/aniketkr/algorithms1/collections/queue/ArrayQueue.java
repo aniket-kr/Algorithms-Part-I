@@ -1,6 +1,5 @@
 package com.company.aniketkr.algorithms1.collections.queue;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -42,17 +41,9 @@ public final class ArrayQueue<E> implements Queue<E> {
     arr = (E[]) new Object[capacity];
   }
 
-  private int head() {
-    return (head < tail) ? arr.length + head : head;
-  }
-
   private void incHead() {
     // assume that arr always has sufficient space
     head = (head + 1) % arr.length;
-  }
-
-  private int tail() {
-    return tail;
   }
 
   private void incTail() {
@@ -135,7 +126,16 @@ public final class ArrayQueue<E> implements Queue<E> {
    */
   @Override
   public int size() {
-    return head() - tail();
+    /*
+      [PART-1] is the regular calculation of size() when the queue does not wrap.
+
+      [PART-2] is when the queue wraps and `head` ends up before `tail`. This is when it
+      becomes ABSOLUTELY CRITICAL that the value of `tail` index is subtracted from length
+      of array BEFORE adding the `head` index. This ensures that no unforeseen INTEGER
+      OVERFLOWS happen.
+     */
+    return head >= tail ? head - tail :   // [PART-1]
+        (arr.length - tail) + head;       // [PART-2]
   }
 
   /**
