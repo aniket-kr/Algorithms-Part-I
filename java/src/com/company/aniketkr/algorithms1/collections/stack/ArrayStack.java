@@ -1,7 +1,10 @@
 package com.company.aniketkr.algorithms1.collections.stack;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+// TODO: docs under construction
 
 /**
  * Implements the {@link Stack} interface using an internal resizing array. The
@@ -15,7 +18,9 @@ import java.util.NoSuchElementException;
  * @author Aniket Kumar
  */
 public final class ArrayStack<E> implements Stack<E> {
-  private static final int INIT_CAPACITY = 4;
+  private static final int INIT_CAPACITY = 8;
+  private E[] arr;
+  private int head = 0;
 
   /**
    * Initialize and return a new ArrayStack object.
@@ -33,7 +38,9 @@ public final class ArrayStack<E> implements Stack<E> {
    *                 accommodate without needing to resize.
    * @throws NegativeArraySizeException If {@code capacity} is negative.
    */
+  @SuppressWarnings("unchecked")
   public ArrayStack(int capacity) {
+    arr = (E[]) new Object[capacity];
   }
 
   /* **************************************************************************
@@ -53,7 +60,20 @@ public final class ArrayStack<E> implements Stack<E> {
    *     to compare.
    */
   public boolean equals(Object obj) {
-    return false;
+    if (this == obj)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof Stack))    return false;
+    Stack<?> that = (Stack<?>) obj;
+    if (this.size() != that.size()) return false;
+
+    // compare all elements
+    Iterator<?> itor = that.iterator();
+    for (E elmt : this) {
+      if (!elmt.equals(itor.next())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -62,7 +82,14 @@ public final class ArrayStack<E> implements Stack<E> {
    * @return A string.
    */
   public String toString() {
-    return null;
+    if (isEmpty()) return "ArrayStack[0] [ ]";
+
+    StringBuilder sb = new StringBuilder("ArrayStack[").append(size()).append("] [ ");
+    for (E elmt : this) {
+      sb.append(elmt).append(", ");
+    }
+    sb.setLength(sb.length() - 2);
+    return sb.append(" ]").toString();
   }
 
   /* **************************************************************************
@@ -77,7 +104,7 @@ public final class ArrayStack<E> implements Stack<E> {
    */
   @Override
   public Iterator<E> iterator() {
-    return null;
+    return new ReverseArrayIterator();
   }
 
   /* **************************************************************************
@@ -91,7 +118,7 @@ public final class ArrayStack<E> implements Stack<E> {
    */
   @Override
   public int size() {
-    return 0;
+    return head;
   }
 
   /**
@@ -101,7 +128,7 @@ public final class ArrayStack<E> implements Stack<E> {
    */
   @Override
   public boolean isEmpty() {
-    return false;
+    return size() == 0;
   }
 
   /**
@@ -114,6 +141,13 @@ public final class ArrayStack<E> implements Stack<E> {
    */
   @Override
   public boolean contains(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to contains() in null");
+
+    for (E stackElmt : this) {
+      if (stackElmt.equals(elmt)) {
+        return true;
+      }
+    }
     return false;
   }
 
@@ -121,8 +155,10 @@ public final class ArrayStack<E> implements Stack<E> {
    * Clear the stack of all its elements. Set it to its instantiated state.
    */
   @Override
+  @SuppressWarnings("unchecked")
   public void clear() {
-
+    arr = (E[]) new Object[INIT_CAPACITY];
+    head = 0;
   }
 
   /**
@@ -132,7 +168,11 @@ public final class ArrayStack<E> implements Stack<E> {
    */
   @Override
   public Stack<E> copy() {
-    return null;
+    ArrayStack<E> cp = new ArrayStack<>(size() * 2);
+    System.arraycopy(this.arr, 0, cp.arr, 0, size());
+    cp.head = this.head;
+
+    return cp;
   }
 
   /* **************************************************************************
@@ -147,7 +187,12 @@ public final class ArrayStack<E> implements Stack<E> {
    */
   @Override
   public void push(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to push() is null");
+    if (size() == arr.length) {
+      resize(arr.length * 2);
+    }
 
+    arr[head++] = elmt;
   }
 
   /**
@@ -158,7 +203,14 @@ public final class ArrayStack<E> implements Stack<E> {
    */
   @Override
   public E pop() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("underflow: can't pop() from empty stack");
+    if (size() == arr.length / 4) {
+      resize(arr.length / 2);
+    }
+
+    E elmt = arr[--head];
+    arr[head] = null;
+    return elmt;
   }
 
   /**
@@ -169,6 +221,40 @@ public final class ArrayStack<E> implements Stack<E> {
    */
   @Override
   public E peek() {
-    return null;
+    if (isEmpty()) throw new NoSuchElementException("underflow: can't peek() at empty stack");
+
+    return arr[head - 1];
+  }
+
+  /* **************************************************************************
+   * Section: Helper Methods and Classes
+   ************************************************************************** */
+
+  @SuppressWarnings("unchecked")
+  private void resize(int newSize) {
+    E[] newArr = (E[]) new Object[newSize];
+    System.arraycopy(arr, 0, newArr, 0, size());
+    arr = newArr;
+  }
+
+  private class ReverseArrayIterator implements Iterator<E> {
+    private int current = head - 1;
+
+    @Override
+    public boolean hasNext() {
+      return current >= 0;
+    }
+
+    @Override
+    public E next() {
+      if (!hasNext()) throw new NoSuchElementException("iterator depleted");
+
+      return arr[current--];
+    }
+
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException("remove() not supported");
+    }
   }
 }
