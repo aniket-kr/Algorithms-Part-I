@@ -4,3 +4,6 @@ Algorithms, Part I.iml
 
 # virtualenv
 venv
+
+# javadoc files
+java/docs
