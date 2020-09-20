@@ -1,7 +1,10 @@
 package com.company.aniketkr.algorithms1.collections.list;
 
-
 import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+
+// TODO: docs under construction
 
 /**
  * Implements the {@link List} interface using a singly linked list. New "nodes" to
@@ -12,8 +15,13 @@ import java.util.Iterator;
  * @author Aniket Kumar
  */
 public final class LinkedList<E> implements List<E> {
+  private Node head;
+  private Node tail;
+  private int length = 0;
 
   public LinkedList() {
+    head = null;
+    tail = null;
   }
 
   /* **************************************************************************
@@ -34,7 +42,20 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public boolean equals(Object obj) {
-    return false;
+    if (this == obj)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof List))     return false;
+    List<?> that = (List<?>) obj;
+    if (this.size() != that.size()) return false;
+
+    // compare all elements
+    Iterator<?> itor = that.iterator();
+    for (E elmt : this) {
+      if (!elmt.equals(itor.next())) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -43,7 +64,16 @@ public final class LinkedList<E> implements List<E> {
    * @return A string.
    */
   public String toString() {
-    return null;
+    String className = this.getClass().getSimpleName();
+
+    if (isEmpty()) return className + "[0] [ ]";
+
+    StringBuilder sb = new StringBuilder(className).append("[").append(size()).append("] [ ");
+    for (E elmt : this) {
+      sb.append(elmt).append(", ");
+    }
+    sb.setLength(sb.length() - 2);
+    return sb.append(" ]").toString();
   }
 
   /* **************************************************************************
@@ -58,7 +88,7 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public Iterator<E> iterator() {
-    return null;
+    return new ListIterator();
   }
 
   /* **************************************************************************
@@ -72,7 +102,7 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public int size() {
-    return 0;
+    return length;
   }
 
   /**
@@ -82,7 +112,7 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public boolean isEmpty() {
-    return false;
+    return size() == 0;
   }
 
 
@@ -95,6 +125,13 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public boolean contains(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to contains() is null");
+
+    for (E listElmt : this) {
+      if (listElmt.equals(elmt)) {
+        return true;
+      }
+    }
     return false;
   }
 
@@ -103,7 +140,9 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public void clear() {
-
+    head = null;
+    tail = null;
+    length = 0;
   }
 
   /**
@@ -113,7 +152,12 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public List<E> copy() {
-    return null;
+    LinkedList<E> cp = new LinkedList<>();
+    for (E elmt : this) {
+      cp.add(elmt);
+    }
+
+    return cp;
   }
 
   /* **************************************************************************
@@ -128,7 +172,17 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public void add(E elmt) {
+    if (elmt == null) throw new IllegalArgumentException("argument to add() is null");
 
+    Node node = new Node(elmt);
+    if (isEmpty()) {
+      tail = node;
+      head = node;
+    } else {
+      tail.next = node;
+      tail = node;
+    }
+    length++;
   }
 
   /**
@@ -142,7 +196,19 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public void add(E elmt, int atIndex) {
+    if (elmt == null)      throw new IllegalArgumentException("1st argument to add() is null");
+    if (!inRange(atIndex)) throw new IndexOutOfBoundsException("invalid index: " + atIndex);
 
+    Node newNode = new Node(elmt);
+    if (atIndex == 0) {
+      newNode.next = head;
+      head = newNode;
+    } else {
+      Node prevNode = getNode(atIndex - 1);
+      newNode.next = prevNode.next;
+      prevNode.next = newNode;
+    }
+    length++;
   }
 
   /**
@@ -154,7 +220,7 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public void addAll(E[] elmts) {
-
+    // TODO: implement this after deciding what to do with null values
   }
 
   /**
@@ -171,7 +237,7 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public void addAll(E[] elmts, int fromIndex) {
-
+    // TODO: implement this after deciding what to do with null values
   }
 
   /**
@@ -184,7 +250,7 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public void addAll(Iterable<? extends E> elmts) {
-
+    // TODO: implement this after deciding what to do with null values
   }
 
   /**
@@ -201,7 +267,7 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public void addAll(Iterable<? extends E> elmts, int fromIndex) {
-
+    // TODO: implement this after deciding what to do with null values
   }
 
   /**
@@ -214,7 +280,9 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public E get(int index) {
-    return null;
+    if (!inRange(index)) throw new IllegalArgumentException("invalid index: " + index);
+
+    return getNode(index).elmt;
   }
 
   /**
@@ -228,7 +296,9 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public int indexOf(E elmt) {
-    return 0;
+    if (elmt == null) throw new IllegalArgumentException("argument to indexOf() is null");
+
+    return indexOf(elmt, 0, size());
   }
 
   /**
@@ -248,7 +318,22 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public int indexOf(E elmt, int fromIndex, int toIndex) {
-    return 0;
+    if (elmt == null) throw new IllegalArgumentException("1st argument to indexOf() is null");
+    if (!(inRange(fromIndex) && inRange(toIndex, size()))) {
+      throw new IndexOutOfBoundsException(String.format("invalid indices: %d, %d", fromIndex, toIndex));
+    }
+
+    int i = 0;
+    Node current = getNode(fromIndex);
+
+    // finds the required element
+    for (; i < toIndex; i++) {
+      if (elmt.equals(current.elmt)) {
+        return i;
+      }
+      current = current.next;
+    }
+    return -1;
   }
 
   /**
@@ -261,7 +346,20 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public E delete(int index) {
-    return null;
+    if (!inRange(index)) throw new IndexOutOfBoundsException("invalid index: " + index);
+
+    E elmt;
+    if (index == 0) {
+      elmt = head.elmt;
+      head = head.next;
+    } else {
+      Node prevNode = getNode(index - 1);
+      elmt = prevNode.next.elmt;
+      prevNode.next = prevNode.next.next;
+    }
+    length--;
+
+    return elmt;
   }
 
   /**
@@ -275,6 +373,63 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public int remove(E elmt) {
-    return 0;
+    int i = indexOf(elmt);
+    if (i != -1) {
+      delete(i);
+    }
+
+    return i;
+  }
+
+  /* **************************************************************************
+   * Section: Helper Methods and Classes
+   ************************************************************************** */
+
+  private boolean inRange(int i) {
+    return i >= 0 && i < size();
+  }
+
+  private boolean inRange(int i, int include) {
+    return inRange(i) || i == include;
+  }
+
+  private Node getNode(int atIndex) {
+    Node current = head;
+    for (int i = 0; i < atIndex; i++) {
+      current = current.next;
+    }
+    return current;
+  }
+
+  private class Node {
+    E elmt;
+    Node next = null;
+
+    Node(E elmt) {
+      this.elmt = elmt;
+    }
+  }
+
+  private class ListIterator implements Iterator<E> {
+    private Node current = head;
+
+    @Override
+    public boolean hasNext() {
+      return current != null;
+    }
+
+    @Override
+    public E next() {
+      if (!hasNext()) throw new NoSuchElementException("iterator depleted");
+
+      E elmt = current.elmt;
+      current = current.next;
+      return elmt;
+    }
+
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException("remove() not supported");
+    }
   }
 }
