@@ -2,23 +2,32 @@ package com.company.aniketkr.algorithms1.collections.queue;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.function.Function;
+
 
 /**
  * Implements the {@link Queue} interface using an internal resizing array. The
  * internal array starts off with initial capacity {@value INIT_CAPACITY} if nothing
- * is explicitly specified.
+ * is explicitly specified. This array is guaranteed to be between 25% to 100% full at
+ * all times. The size of the array increases (or decreases) by a factor of 2.
  *
- * <p>This array is guaranteed to be between 25% to 100% full at all times. The size
- * of the array increases (or decreases) by a factor of 2.</p>
+ * <p>
+ * The <em>enqueue</em> and <em>dequeue</em> operations take constant amortized time;
+ * they take <code>&theta;(n)</code> time in worst case. The <em>peek</em> operation takes
+ * constant time. The <em>contains</em> and <em>equals</em> operations take time proportional
+ * to <code>&theta;(n)</code>. The operations to <em>copy</em> and <em>deepcopy</em> take
+ * <code>&theta;(n)</code> time, although <em>copy</em> is slightly faster than
+ * <em>deepcopy</em>. All other operations take constant time.
+ * </p>
  *
- * @param <E> The type of elements in the queue.
+ * @param <E> The type of element in the queue.
  * @author Aniket Kumar
  */
 public final class ArrayQueue<E> implements Queue<E> {
-  private static final int INIT_CAPACITY = 8;
-  private E[] arr;
-  private int head = 0;
-  private int tail = 0;
+  private static final int INIT_CAPACITY = 8;  // default initial capacity
+  private E[] arr;                             // array that has the queue
+  private int head = 0;                        // start or front of the queue
+  private int tail = 0;                        // end or back of the queue
 
   /**
    * Initialize and return a new ArrayQueue object.
@@ -34,18 +43,27 @@ public final class ArrayQueue<E> implements Queue<E> {
    *
    * @param capacity The number of elements that internal array should be able to
    *                 accommodate without needing to resize.
-   * @throws NegativeArraySizeException If {@code capacity} is negative.
+   * @throws IllegalArgumentException If {@code capacity} is less than or equal to 0.
    */
   @SuppressWarnings("unchecked")
   public ArrayQueue(int capacity) {
+    if (capacity <= 0) throw new IllegalArgumentException("invalid capacity: " + capacity);
     arr = (E[]) new Object[capacity];
   }
 
+  /**
+   * Increase the value of {@link #head} by 1 such that the index does not overshoot
+   * <code>{@link #arr}.length</code>. It instead will wrap around the array.
+   */
   private void incHead() {
     // assume that arr always has sufficient space
     head = (head + 1) % arr.length;
   }
 
+  /**
+   * Increase the value of {@link #tail} by 1 such that the index does not overshoot
+   * <code>{@link #arr}.length</code>. It instead will wrap around the array.
+   */
   private void incTail() {
     // assume that arr always has sufficient space
     tail = (tail + 1) % arr.length;
@@ -56,17 +74,13 @@ public final class ArrayQueue<E> implements Queue<E> {
    ************************************************************************** */
 
   /**
-   * Check if this queue is equal to the given object.
-   * Calls {@link Object#equals(Object that) equals()} on the elements to check if they
-   * are equal.
+   * {@inheritDoc}
    *
-   * @param obj The other object to check for equality.
-   * @return {@code true} if {@code obj} is semantically equal to this queue,
+   * @param obj The other Object to compare {@code this} with for equality.
+   * @return {@code true} if {@code obj} is equal to this queue,
    *     {@code false} otherwise.
-   * @implSpec As it currently stands, if two queue objects are empty, the {@code equals}
-   *     method will always return {@code true}. This happens as no elements are available
-   *     to compare.
    */
+  @Override
   public boolean equals(Object obj) {
     if (this == obj)                return true;
     if (obj == null)                return false;
@@ -85,14 +99,19 @@ public final class ArrayQueue<E> implements Queue<E> {
   }
 
   /**
-   * Return a string representation of the queue. Primarily for debugging.
+   * Get a string representation of the queue.
+   * Primarily for debugging and helping find bugs in client code.
    *
    * @return A string.
    */
+  @Override
+  @SuppressWarnings("DuplicatedCode")
   public String toString() {
-    if (isEmpty()) return "ArrayQueue[0] [ ]";
+    String className = this.getClass().getSimpleName();
 
-    StringBuilder sb = new StringBuilder("ArrayQueue[").append(size()).append("] [ ");
+    if (isEmpty()) return className + "[0] [ ]";
+
+    StringBuilder sb = new StringBuilder(className).append("[").append(size()).append("] [ ");
     for (E elmt : this) {
       sb.append(elmt).append(", ");
     }
@@ -105,8 +124,7 @@ public final class ArrayQueue<E> implements Queue<E> {
    ************************************************************************** */
 
   /**
-   * Get an iterator object that produces the elements of the queue in its natural
-   * order.
+   * Get an iterator that produces the elements of the queue in <em>FIFO</em> order.
    *
    * @return An iterator.
    */
@@ -122,7 +140,7 @@ public final class ArrayQueue<E> implements Queue<E> {
   /**
    * How many elements are present in the queue?
    *
-   * @return The count of number of elements in the queue.
+   * @return The count of elements present in the queue.
    */
   @Override
   public int size() {
@@ -151,9 +169,9 @@ public final class ArrayQueue<E> implements Queue<E> {
   /**
    * Does {@code elmt} exist in the queue?
    *
-   * @param elmt The element to check for.
-   * @return {@code true} if {@code elmt} exists in the queue, {@code false}
-   *     otherwise.
+   * @param elmt The element to check existence of.
+   * @return {@code true} if {@code elmt} exists, {@code false} otherwise.
+   *
    * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
   @Override
@@ -169,7 +187,8 @@ public final class ArrayQueue<E> implements Queue<E> {
   }
 
   /**
-   * Clear the queue of all its elements. Set it to its instantiated state.
+   * Clear the queue of all its elements.
+   * Sets all internal state members to their <em>default</em> initial state.
    */
   @Override
   @SuppressWarnings("unchecked")
@@ -180,17 +199,49 @@ public final class ArrayQueue<E> implements Queue<E> {
   }
 
   /**
-   * Get a shallow copy of the queue.
+   * Return a shallow copy of the queue.
+   * A shallow copy creates a copy of the queue but not the elements in the
+   * queue.
    *
-   * @return A new queue.
+   * @return A shallow copy of the queue.
+   *
+   * @see #deepcopy(Function copyFn)
    */
   @Override
   public Queue<E> copy() {
-    ArrayQueue<E> cp = new ArrayQueue<>(size() * 2);
+    ArrayQueue<E> cp = new ArrayQueue<>(this.size() * 2);
     copyOver(cp.arr);
     cp.head = size();
     cp.tail = 0;
 
+    return cp;
+  }
+
+  /**
+   * Returns a deepcopy of the queue.
+   * A deepcopy creates a copy of the queue and populates it with copies of the
+   * original elements.
+   *
+   * @param copyFn A {@link Function} that takes original element as the
+   *               argument and returns a deepcopy of that element.
+   * @return A deepcopy of the queue.
+   *
+   * @throws IllegalArgumentException If {@code copyFn} is {@code null} or it returns
+   *                                  any {@code null} values.
+   * @see #copy()
+   */
+  @Override
+  public Queue<E> deepcopy(Function<? super E, E> copyFn) {
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
+    copyFn = copyFn.andThen(elmt -> {
+      if (elmt == null) throw new IllegalArgumentException("copyFn mustn't return null values");
+      return elmt;
+    });
+
+    ArrayQueue<E> cp = new ArrayQueue<>(this.size() * 2);
+    for (E elmt : this) {
+      cp.enqueue(copyFn.apply(elmt));
+    }
     return cp;
   }
 
@@ -219,7 +270,8 @@ public final class ArrayQueue<E> implements Queue<E> {
    * Remove the first element from the front of the queue.
    *
    * @return The removed element.
-   * @throws NoSuchElementException If queue is empty (underflow).
+   *
+   * @throws NoSuchElementException If queue is empty; <em>underflow</em>.
    */
   @Override
   public E dequeue() {
@@ -239,7 +291,8 @@ public final class ArrayQueue<E> implements Queue<E> {
    * Return the first element from the front of the queue, without removing it.
    *
    * @return The first element of the queue.
-   * @throws NoSuchElementException If queue is empty (underflow).
+   *
+   * @throws NoSuchElementException If queue is empty; <em>underflow</em>.
    */
   @Override
   public E peek() {
@@ -252,6 +305,12 @@ public final class ArrayQueue<E> implements Queue<E> {
    * Section: Helper Methods and Classes
    ************************************************************************** */
 
+  /**
+   * Resize the internal array to {@code newSize}.
+   * Resizing is achieved by creating a new array of {@code newSize} and copying over elements.
+   *
+   * @param newSize The new desired capacity of the new internal array.
+   */
   @SuppressWarnings("unchecked")
   private void resize(int newSize) {
     E[] newArr = (E[]) new Object[newSize];
@@ -262,6 +321,12 @@ public final class ArrayQueue<E> implements Queue<E> {
     arr = newArr;
   }
 
+  /**
+   * Safely copy over <em>references</em> of the elements from the internal array to the
+   * given array. The wrap state of the queue is handled internally.
+   *
+   * @param toArr The array to copy over elements to.
+   */
   private void copyOver(Object[] toArr) {
     if (head > tail) {
       System.arraycopy(arr, tail, toArr, 0, size());
@@ -271,27 +336,49 @@ public final class ArrayQueue<E> implements Queue<E> {
     }
   }
 
+  /**
+   * An {@link Iterator} class that supports iteration over "wrapped" queues.
+   */
   private class WrapArrayIterator implements Iterator<E> {
-    private boolean resetToStart;
-    private int current;
-    private final int stop;
+    private final int stop;     // last element of the queue lies *before* this index
+    private boolean isWrapped;  // is the queue wrapped (head lies before tail)
+    private int current;        // start iterating from this index
 
-    private WrapArrayIterator(int trueHead, int trueTail) {
-      resetToStart = trueHead < trueTail;
-      current = trueTail;
-      stop = trueHead;
+    /**
+     * Initialize and return a new iterator that starts iterating from the {@code head}
+     * and stops at {@code tail}. The wrapped state is handled internally.
+     *
+     * @param head The position of head in the array.
+     * @param tail The position of tail in the array.
+     */
+    private WrapArrayIterator(int head, int tail) {
+      isWrapped = head < tail;
+      current = tail;
+      stop = head;
     }
 
+    /**
+     * Can the iterator produce another value?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code true} otherwise.
+     */
     @Override
     public boolean hasNext() {
-      if (resetToStart && current == arr.length) {
+      if (isWrapped && current == arr.length) {
         current = 0;
-        resetToStart = false;
+        isWrapped = false;
       }
 
-      return resetToStart || current < stop;
+      return isWrapped || current < stop;
     }
 
+    /**
+     * Produce the next value from the iterator and return it.
+     *
+     * @return The next value.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
     @Override
     public E next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
@@ -299,6 +386,11 @@ public final class ArrayQueue<E> implements Queue<E> {
       return arr[current++];
     }
 
+    /**
+     * Remove not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
     @Override
     public void remove() {
       throw new UnsupportedOperationException("remove() not supported");

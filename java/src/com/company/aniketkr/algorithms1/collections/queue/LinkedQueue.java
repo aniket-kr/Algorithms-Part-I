@@ -2,24 +2,31 @@ package com.company.aniketkr.algorithms1.collections.queue;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.function.Function;
 
-// FIXME: proofread the docs
 
 /**
  * Implements the {@link Queue} interface using a singly linked list. The
  * "nodes" to the list are added/removed as elements are <em>enqueued/dequeued</em>
  * from the queue.
  *
- * @param <E> The type of elements in the queue.
+ * <p>
+ * The <em>enqueue</em>, <em>dequeue</em> and <em>peek</em> operations take constant time.
+ * The <em>equals</em> and <em>contains</em> operations take <code>&theta;(n)</code> time.
+ * The operations to <em>copy</em>a nd <em>deepcopy</em> take <code>&theta;(n)</code> time.
+ * All other operations take constant time.
+ * </p>
+ *
+ * @param <E> The type of element in the queue.
  * @author Aniket Kumar
  */
 public final class LinkedQueue<E> implements Queue<E> {
-  private Node head;
-  private Node tail;
-  private int length = 0;
+  private Node head;        // start or front of the queue
+  private Node tail;        // end or back of the queue
+  private int length = 0;   // length of the queue
 
   /**
-   * Initialize and return a new LinkedQueue object.
+   * Initialize and return an empty LinkedQueue object.
    */
   public LinkedQueue() {
     head = null;
@@ -31,17 +38,13 @@ public final class LinkedQueue<E> implements Queue<E> {
    ************************************************************************** */
 
   /**
-   * Check if this queue is equal to the given object.
-   * Calls {@link Object#equals(Object that) equals()} on the elements to check if they
-   * are equal.
+   * {@inheritDoc}
    *
-   * @param obj The other object to check for equality.
-   * @return {@code true} if {@code obj} is semantically equal to this queue,
+   * @param obj The other Object to compare {@code this} with for equality.
+   * @return {@code true} if {@code obj} is equal to this queue,
    *     {@code false} otherwise.
-   * @implSpec As it currently stands, if two queue objects are empty, the {@code equals}
-   *     method will always return {@code true}. This happens as no elements are available to
-   *     compare.
    */
+  @Override
   public boolean equals(Object obj) {
     if (this == obj)                return true;
     if (obj == null)                return false;
@@ -60,14 +63,19 @@ public final class LinkedQueue<E> implements Queue<E> {
   }
 
   /**
-   * Return a string representation of the queue. Primarily for debugging.
+   * Get a string representation of the queue.
+   * Primarily for debugging and helping find bugs in client code.
    *
    * @return A string.
    */
+  @Override
+  @SuppressWarnings("DuplicatedCode")
   public String toString() {
-    if (isEmpty()) return "LinkedQueue[0] [ ]";
+    String className = this.getClass().getSimpleName();
 
-    StringBuilder sb = new StringBuilder("LinkedQueue[").append(size()).append("] [ ");
+    if (isEmpty()) return className + "[0] [ ]";
+
+    StringBuilder sb = new StringBuilder(className).append("[").append(size()).append("] [ ");
     for (E elmt : this) {
       sb.append(elmt).append(", ");
     }
@@ -80,8 +88,7 @@ public final class LinkedQueue<E> implements Queue<E> {
    ************************************************************************** */
 
   /**
-   * Get an iterator object that produces the elements of the queue in its natural
-   * order.
+   * Get an iterator that produces the elements of the queue in <em>FIFO</em> order.
    *
    * @return An iterator.
    */
@@ -97,7 +104,7 @@ public final class LinkedQueue<E> implements Queue<E> {
   /**
    * How many elements are present in the queue?
    *
-   * @return The count of number of elements in the queue.
+   * @return The count of elements present in the queue.
    */
   @Override
   public int size() {
@@ -117,9 +124,9 @@ public final class LinkedQueue<E> implements Queue<E> {
   /**
    * Does {@code elmt} exist in the queue?
    *
-   * @param elmt The element to check for.
-   * @return {@code true} if {@code elmt} exists in the queue, {@code false}
-   *     otherwise.
+   * @param elmt The element to check existence of.
+   * @return {@code true} if {@code elmt} exists, {@code false} otherwise.
+   *
    * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
   @Override
@@ -133,9 +140,10 @@ public final class LinkedQueue<E> implements Queue<E> {
     }
     return false;
   }
-  
+
   /**
-   * Clear the queue of all its elements. Set it to its instantiated state.
+   * Clear the queue of all its elements.
+   * Sets all internal state members to their <em>default</em> initial state.
    */
   @Override
   public void clear() {
@@ -145,15 +153,43 @@ public final class LinkedQueue<E> implements Queue<E> {
   }
 
   /**
-   * Get a shallow copy of the queue.
+   * Return a shallow copy of the queue.
+   * A shallow copy creates a copy of the queue but not the elements in the
+   * queue.
    *
-   * @return A new queue.
+   * @return A shallow copy of the queue.
+   *
+   * @see #deepcopy(Function copyFn)
    */
   @Override
   public Queue<E> copy() {
+    return deepcopy(Function.identity());
+  }
+
+  /**
+   * Returns a deepcopy of the queue.
+   * A deepcopy creates a copy of the queue and populates it with copies of the
+   * original elements.
+   *
+   * @param copyFn A {@link Function} that takes original element as the
+   *               argument and returns a deepcopy of that element.
+   * @return A deepcopy of the queue.
+   *
+   * @throws IllegalArgumentException If {@code copyFn} is {@code null} or it returns
+   *                                  any {@code null} values.
+   * @see #copy()
+   */
+  @Override
+  public Queue<E> deepcopy(Function<? super E, E> copyFn) {
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
+    copyFn = copyFn.andThen(elmt -> {
+      if (elmt == null) throw new IllegalArgumentException("copyFn mustn't return null");
+      return elmt;
+    });
+
     Queue<E> cp = new LinkedQueue<>();
     for (E elmt : this) {
-      cp.enqueue(elmt);
+      cp.enqueue(copyFn.apply(elmt));
     }
 
     return cp;
@@ -188,7 +224,8 @@ public final class LinkedQueue<E> implements Queue<E> {
    * Remove the first element from the front of the queue.
    *
    * @return The removed element.
-   * @throws NoSuchElementException If queue is empty (underflow).
+   *
+   * @throws NoSuchElementException If queue is empty; <em>underflow</em>.
    */
   @Override
   public E dequeue() {
@@ -211,7 +248,8 @@ public final class LinkedQueue<E> implements Queue<E> {
    * Return the first element from the front of the queue, without removing it.
    *
    * @return The first element of the queue.
-   * @throws NoSuchElementException If queue is empty (underflow).
+   *
+   * @throws NoSuchElementException If queue is empty; <em>underflow</em>.
    */
   @Override
   public E peek() {
@@ -224,23 +262,48 @@ public final class LinkedQueue<E> implements Queue<E> {
    * Section: Helper Methods and Classes
    ************************************************************************** */
 
+  /**
+   * Represents a Node in a singly linked list.
+   * Each node hold the client value and a reference to the next node in the list.
+   */
   private class Node {
-    E elmt;
-    Node next = null;
+    E elmt;             // holds the client value
+    Node next = null;   // reference to the next node
 
+    /**
+     * Initialize and return a new Node object with client value set to {@code elmt}.
+     *
+     * @param elmt The client value node shall hold.
+     */
     Node(E elmt) {
       this.elmt = elmt;
     }
   }
 
+  /**
+   * An {@link Iterator} class that iterates over the values stores in the nodes of a
+   * linked list.
+   */
   private class NodeIterator implements Iterator<E> {
-    private Node current = tail;
+    private Node current = tail;  // start with this node
 
+    /**
+     * Can the iterator produce another value?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code true} otherwise.
+     */
     @Override
     public boolean hasNext() {
       return current != null;
     }
 
+    /**
+     * Produce the next value from the iterator.
+     *
+     * @return The next value.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
     @Override
     public E next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
@@ -250,6 +313,11 @@ public final class LinkedQueue<E> implements Queue<E> {
       return elmt;
     }
 
+    /**
+     * Remove not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
     @Override
     public void remove() {
       throw new UnsupportedOperationException("remove() not supported");

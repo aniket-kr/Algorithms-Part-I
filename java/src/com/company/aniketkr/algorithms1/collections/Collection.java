@@ -104,6 +104,8 @@ public interface Collection<E> extends Iterable<E> {
    * collection.
    *
    * @return A shallow copy of the collection.
+   *
+   * @see #deepcopy(Function copyFn)
    */
   Collection<E> copy();
 
@@ -117,6 +119,7 @@ public interface Collection<E> extends Iterable<E> {
    * @return A deepcopy of the collection.
    *
    * @throws IllegalArgumentException If {@code copyFn} is {@code null}.
+   * @see #copy()
    */
   Collection<E> deepcopy(Function<? super E, E> copyFn);
 }
