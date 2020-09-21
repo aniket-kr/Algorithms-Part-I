@@ -2,22 +2,14 @@ package com.company.aniketkr.algorithms1.collections.list;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.function.Function;
 
 
-// TODO: docs under construction
-
-/**
- * Implements the {@link List} interface using a singly linked list. New "nodes" to
- * this dynamic list are added/removed as new elements are <em>added/inserted</em>
- * and deleted as they are <em>removed</em>.
- *
- * @param <E> The type of the elements in the list.
- * @author Aniket Kumar
- */
 public final class LinkedList<E> implements List<E> {
-  private Node head;
-  private Node tail;
-  private int length = 0;
+  private Node head;       // the first node in the list
+  private Node tail;       // the last node in the list
+  private int length = 0;  // number of nodes in the list
 
   public LinkedList() {
     head = null;
@@ -29,29 +21,24 @@ public final class LinkedList<E> implements List<E> {
    ************************************************************************** */
 
   /**
-   * Check if this list is equal to the given object.
-   * Calls {@link Object#equals(Object that) equals()} on the elements to check if they
-   * are equal.
+   * {@inheritDoc}
    *
-   * @param obj The other object to check for equality.
-   * @return {@code true} if {@code obj} is semantically equal to this list,
+   * @param obj The other Object to compare {@code this} with for equality.
+   * @return {@code true} if {@code obj} is equal to this list,
    *     {@code false} otherwise.
-   * @implSpec As it currently stands, if two list objects are empty, the {@code equals}
-   *     method will always return {@code true}. This happens as no elements are available
-   *     to compare.
    */
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)                return true;
-    if (obj == null)                return false;
-    if (!(obj instanceof List))     return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!(obj instanceof List)) return false;
     List<?> that = (List<?>) obj;
     if (this.size() != that.size()) return false;
 
     // compare all elements
     Iterator<?> itor = that.iterator();
     for (E elmt : this) {
-      if (!elmt.equals(itor.next())) {
+      if (!Objects.equals(elmt, itor.next())) {
         return false;
       }
     }
@@ -59,10 +46,13 @@ public final class LinkedList<E> implements List<E> {
   }
 
   /**
-   * Return a string representation of the list. Primarily for debugging.
+   * Get a string representation of the list.
+   * Primarily for debugging and helping find bugs in client code.
    *
    * @return A string.
    */
+  @Override
+  @SuppressWarnings("DuplicatedCode")
   public String toString() {
     String className = this.getClass().getSimpleName();
 
@@ -81,14 +71,14 @@ public final class LinkedList<E> implements List<E> {
    ************************************************************************** */
 
   /**
-   * Get an iterator object that produces the elements of the list in its natural
-   * order.
+   * Get an iterator that produces the elements of the list in increasing order of
+   * their indices.
    *
    * @return An iterator.
    */
   @Override
   public Iterator<E> iterator() {
-    return new ListIterator();
+    return new NodeIterator();
   }
 
   /* **************************************************************************
@@ -98,7 +88,7 @@ public final class LinkedList<E> implements List<E> {
   /**
    * How many elements are present in the list?
    *
-   * @return The count of number of elements in the list.
+   * @return The count of elements present in the list.
    */
   @Override
   public int size() {
@@ -115,28 +105,20 @@ public final class LinkedList<E> implements List<E> {
     return size() == 0;
   }
 
-
   /**
-   * Does the element {@code elmt} exist in the list?
+   * Does {@code elmt} exist in the list?
    *
-   * @param elmt The element.
-   * @return {@code true} if {@code elmt} exists in the list, {@code false} otherwise.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   * @param elmt The element to check existence of.
+   * @return {@code true} if {@code elmt} exists, {@code false} otherwise.
    */
   @Override
   public boolean contains(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to contains() is null");
-
-    for (E listElmt : this) {
-      if (listElmt.equals(elmt)) {
-        return true;
-      }
-    }
-    return false;
+    return indexOf(elmt) != -1;
   }
 
   /**
-   * Clear the list of all its elements. Set it to its instantiated state.
+   * Clear the list of all its elements.
+   * Sets all internal state members to their <em>default</em> initial state.
    */
   @Override
   public void clear() {
@@ -146,15 +128,38 @@ public final class LinkedList<E> implements List<E> {
   }
 
   /**
-   * Get a shallow copy of the list.
+   * Return a shallow copy of the list.
+   * A shallow copy creates a copy of the list but not the elements in the
+   * list.
    *
-   * @return A new list.
+   * @return A shallow copy of the list.
+   *
+   * @see #deepcopy(Function copyFn)
    */
   @Override
   public List<E> copy() {
+    return deepcopy(Function.identity());
+  }
+
+  /**
+   * Returns a deepcopy of the list.
+   * A deepcopy creates a copy of the list and populates it with copies of the
+   * original elements.
+   *
+   * @param copyFn A {@link Function} that takes original element as the
+   *               argument and returns a deepcopy of that element.
+   * @return A deepcopy of the list.
+   *
+   * @throws IllegalArgumentException If {@code copyFn} is {@code null}.
+   * @see #copy()
+   */
+  @Override
+  public List<E> deepcopy(Function<? super E, E> copyFn) {
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
+
     LinkedList<E> cp = new LinkedList<>();
     for (E elmt : this) {
-      cp.add(elmt);
+      cp.add(copyFn.apply(elmt));
     }
 
     return cp;
@@ -165,15 +170,13 @@ public final class LinkedList<E> implements List<E> {
    ************************************************************************** */
 
   /**
-   * Add the given element {@code elmt} to the end of the list.
+   * Add {@code elmt} to the end of the list.
    *
    * @param elmt The element.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   * @see #insert(int atIndex, E elmt)
    */
   @Override
   public void add(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to add() is null");
-
     Node node = new Node(elmt);
     if (isEmpty()) {
       tail = node;
@@ -186,152 +189,194 @@ public final class LinkedList<E> implements List<E> {
   }
 
   /**
-   * Insert the given element {@code elmt} at the index {@code atIndex}.
+   * Add all the elements in {@code elmts} array to the end of the list.
    *
-   * @param elmt    The element.
-   * @param atIndex The index to insert at.
-   * @throws IllegalArgumentException  If {@code elmt} is {@code null}.
-   * @throws IndexOutOfBoundsException If {@code atIndex} is not in range <code>
-   *                                   [0, {@link #size()}]</code>.
-   */
-  @Override
-  public void add(E elmt, int atIndex) {
-    if (elmt == null)      throw new IllegalArgumentException("1st argument to add() is null");
-    if (!inRange(atIndex)) throw new IndexOutOfBoundsException("invalid index: " + atIndex);
-
-    Node newNode = new Node(elmt);
-    if (atIndex == 0) {
-      newNode.next = head;
-      head = newNode;
-    } else {
-      Node prevNode = getNode(atIndex - 1);
-      newNode.next = prevNode.next;
-      prevNode.next = newNode;
-    }
-    length++;
-  }
-
-  /**
-   * Add all the elements in the array {@code elmts} to the end of the list.
-   *
-   * @param elmts The array of elements to add.
-   * @throws IllegalArgumentException If either {@code elmts} or any of its elements is
-   *                                  {#code null}.
+   * @param elmts The array with elements to add.
+   * @throws IllegalArgumentException If {@code elmts} is {@code null}.
+   * @see #insertAll(int fromIndex, E[] elmts)
    */
   @Override
   public void addAll(E[] elmts) {
-    // TODO: implement this after deciding what to do with null values
+    if (elmts == null) throw new IllegalArgumentException("argument to addAll() is null");
+
+    for (E elmt : elmts) {
+      add(elmt);
+    }
   }
 
   /**
-   * Insert all the elements in the array {@code elmts} to the list, starting from
-   * the index {@code fromIndex}.
-   *
-   * @param elmts     The array of elements to insert.
-   * @param fromIndex The index at which the first element from {@code elmts}
-   *                  should appear.
-   * @throws IllegalArgumentException  If {@code elmts} or any of its elements is
-   *                                   {@code null}.
-   * @throws IndexOutOfBoundsException If {@code fromIndex} is not in range <code>
-   *                                   [0, {@link #size()}]</code>.
-   */
-  @Override
-  public void addAll(E[] elmts, int fromIndex) {
-    // TODO: implement this after deciding what to do with null values
-  }
-
-  /**
-   * Add all the elements produced by the iterable {@code elmts}, to the end of the
+   * Add all the elements produced by {@code elmts}, to the end of the
    * list.
    *
    * @param elmts The iterable that produces elements to add.
    * @throws IllegalArgumentException If {@code elmts}, or any of the elements it
    *                                  produces, is {@code null}.
+   * @see #insertAll(int fromIndex, Iterable elmts)
    */
   @Override
   public void addAll(Iterable<? extends E> elmts) {
-    // TODO: implement this after deciding what to do with null values
+    if (elmts == null) throw new IllegalArgumentException("argument to addAll() is null");
+
+    for (E elmt : elmts) {
+      add(elmt);
+    }
   }
 
   /**
-   * Insert all the elements produced by the iterable {@code elmts} to the list, starting
+   * Insert the given element {@code elmt} at the index {@code atIndex}.
+   *
+   * @param elmt    The element.
+   * @param atIndex The index to insert at.
+   * @throws IndexOutOfBoundsException If {@code atIndex} is not in range <code>
+   *                                   [0, {@link #size()})</code>.
+   * @see #add(E elmt)
+   */
+  @Override
+  public void insert(int atIndex, E elmt) {
+    if (!isInRange(atIndex)) throw new IndexOutOfBoundsException("invalid index: " + atIndex);
+
+    Node node = new Node(elmt);
+    Node prevNode = (atIndex == 0) ? head : nodeAt(atIndex - 1);
+
+    node.next = prevNode.next;
+    prevNode.next = node;
+    length++;
+  }
+
+  /**
+   * Insert all the elements in {@code elmts} into the list, starting from
+   * the index {@code fromIndex}.
+   *
+   * @param elmts     The array of elements to insert.
+   * @param fromIndex The index at which the first element from {@code elmts}
+   *                  should appear.
+   * @throws IllegalArgumentException  If {@code elmts} is {@code null}.
+   * @throws IndexOutOfBoundsException If {@code fromIndex} is not in range <code>
+   *                                   [0, {@link #size()})</code>.
+   * @see #addAll(E[] elmts)
+   */
+  @Override
+  @SuppressWarnings("DuplicatedCode")  // insertAll() overload
+  public void insertAll(int fromIndex, E[] elmts) {
+    if (elmts == null) throw new IllegalArgumentException("1st argument to insertAll() is null");
+    if (!isInRange(fromIndex)) throw new IndexOutOfBoundsException("invalid index: " + fromIndex);
+
+    Node prevNode = (fromIndex == 0) ? head : nodeAt(fromIndex - 1);
+    Node successor = prevNode.next;
+
+    for (E elmt : elmts) {
+      prevNode.next = new Node(elmt);
+      prevNode = prevNode.next;
+      length++;
+    }
+
+    // prevNode is now references last inserted Node
+    prevNode.next = successor;
+  }
+
+  /**
+   * Insert all the elements produced by {@code elmts} into the list, starting
    * from the index {#code fromIndex}.
    *
    * @param elmts     The iterable that produces elements to insert.
-   * @param fromIndex The index at which the first element produced by {#code elmts}
+   * @param fromIndex The index at which the first element produced by {@code elmts}
    *                  should appear.
-   * @throws IllegalArgumentException  If {@code elmts}, or any of the elements it
-   *                                   produces, is {@code null}.
+   * @throws IllegalArgumentException  If {@code elmts} is {@code null}.
    * @throws IndexOutOfBoundsException If {@code fromIndex} is not in range <code>
-   *                                   [0, {@link #size()}]</code>.
+   *                                   [0, {@link #size()})</code>.
+   * @see #addAll(Iterable elmts)
    */
   @Override
-  public void addAll(Iterable<? extends E> elmts, int fromIndex) {
-    // TODO: implement this after deciding what to do with null values
+  @SuppressWarnings("DuplicatedCode")  // insertAll() overload
+  public void insertAll(int fromIndex, Iterable<? extends E> elmts) {
+    if (elmts == null) throw new IllegalArgumentException("1st argument to insertAll() is null");
+    if (!isInRange(fromIndex)) throw new IndexOutOfBoundsException("invalid index: " + fromIndex);
+
+    Node prevNode = (fromIndex == 0) ? head : nodeAt(fromIndex - 1);
+    Node successor = prevNode.next;
+
+    for (E elmt : elmts) {
+      prevNode.next = new Node(elmt);
+      prevNode = prevNode.next;
+      length++;
+    }
+
+    // prevNode is now references last inserted Node
+    prevNode.next = successor;
   }
 
   /**
-   * Get the element at the index {@code index} in the list.
+   * Get element from the list, whose index is {@code index}.
    *
    * @param index The index.
    * @return The element at {@code index}.
+   *
    * @throws IndexOutOfBoundsException If {@code index} is not in range <code>
-   *                                   [0, {@link #size()}]</code>.
+   *                                   [0, {@link #size()})</code>.
    */
   @Override
   public E get(int index) {
-    if (!inRange(index)) throw new IllegalArgumentException("invalid index: " + index);
+    if (!isInRange(index)) throw new IndexOutOfBoundsException("invalid index: " + index);
 
-    return getNode(index).elmt;
+    return nodeAt(index).elmt;
   }
 
   /**
-   * Get the index of the first occurrence of {@code elmt} in the list. Uses elements'
-   * {@link Object#equals(Object obj) equals} implementation to check if {@code elmt}
-   * is equals to any of them.
+   * Set {@code elmt} at index {@code index}.
+   * The old value stored at the given index is discarded.
+   *
+   * @param index The index to change value at.
+   * @param elmt  The new element.
+   * @throws IndexOutOfBoundsException If {@code index} is not in range <code>
+   *                                   [0, {@link #size()})</code>.
+   */
+  @Override
+  public void set(int index, E elmt) {
+    if (!isInRange(index)) throw new IndexOutOfBoundsException("invalid index: " + index);
+
+    nodeAt(index).elmt = elmt;
+  }
+
+  /**
+   * Get the index of the first occurrence of {@code elmt} in the list.
    *
    * @param elmt The element to look for.
-   * @return The index of first occurrence of {@code elmt} in the list; {@literal -1}
-   *     if {@code elmt} does not exist in the list.
+   * @return The index of first occurrence of {@code elmt} in the list; -1 if
+   *     {@code elmt} does not exist in the list.
    */
   @Override
   public int indexOf(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to indexOf() is null");
-
     return indexOf(elmt, 0, size());
   }
 
   /**
    * Get the index of the first occurrence of {@code elmt} between indices {@code fromIndex}
    * and {@code toIndex}.
+   * If {@code fromIndex} happens to be larger than or equal to {@code toIndex}, then -1
+   * is returned.
    *
    * @param elmt      The element to look for.
    * @param fromIndex The index to start looking at (inclusive).
    * @param toIndex   The index to look upto (exclusive).
    * @return The index of the first occurrence of {@code elmt} in the range, {@literal -1}
    *     if {@code elmt} does not exist in the given range.
-   * @throws IllegalArgumentException  If {@code elmt} is {@code null}.
+   *
    * @throws IndexOutOfBoundsException If either {@code fromIndex} or {@code toIndex} is
    *                                   not in range <code>[0, {@link #size()}]</code>.
-   * @implSpec If no elements fall in the range specified by {@code fromIndex} and
-   *     {@code toIndex}, then {@literal -1} is returned.
    */
   @Override
   public int indexOf(E elmt, int fromIndex, int toIndex) {
-    if (elmt == null) throw new IllegalArgumentException("1st argument to indexOf() is null");
-    if (!(inRange(fromIndex) && inRange(toIndex, size()))) {
-      throw new IndexOutOfBoundsException(String.format("invalid indices: %d, %d", fromIndex, toIndex));
+    if (!isInRange(fromIndex)) throw new IndexOutOfBoundsException("invalid fromIndex: " + fromIndex);
+    if (!(isInRange(toIndex) || toIndex == size())) {
+      throw new IndexOutOfBoundsException("invalid toIndex: " + toIndex);
     }
 
-    int i = 0;
-    Node current = getNode(fromIndex);
+    Node current = nodeAt(fromIndex);
 
-    // finds the required element
-    for (; i < toIndex; i++) {
-      if (elmt.equals(current.elmt)) {
+    for (int i = fromIndex; i < toIndex; i++) {
+      if (Objects.equals(current.elmt, elmt)) {
         return i;
       }
-      current = current.next;
     }
     return -1;
   }
@@ -341,24 +386,17 @@ public final class LinkedList<E> implements List<E> {
    *
    * @param index The index to delete element at.
    * @return The deleted element.
+   *
    * @throws IndexOutOfBoundsException If {@code index} is not in range <code>
-   *                                   [0, {@link #size()}</code>.
+   *                                   [0, {@link #size()})</code>.
+   * @see #remove(E elmt)
    */
   @Override
   public E delete(int index) {
-    if (!inRange(index)) throw new IndexOutOfBoundsException("invalid index: " + index);
+    if (!isInRange(index)) throw new IndexOutOfBoundsException("invalid index: " + index);
 
-    E elmt;
-    if (index == 0) {
-      elmt = head.elmt;
-      head = head.next;
-    } else {
-      Node prevNode = getNode(index - 1);
-      elmt = prevNode.next.elmt;
-      prevNode.next = prevNode.next.next;
-    }
+    E elmt = unlinkNext((size() == 0) ? null : nodeAt(index - 1)).elmt;
     length--;
-
     return elmt;
   }
 
@@ -367,38 +405,59 @@ public final class LinkedList<E> implements List<E> {
    * index.
    *
    * @param elmt The element to remove.
-   * @return The index of the now removed element; {@literal -1} if {@code elmt} did not
-   *     exist in the list.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   * @return The index of the now removed element; -1 if {@code elmt} did not exist in
+   *     the list.
+   *
+   * @see #delete(int index)
    */
   @Override
   public int remove(E elmt) {
-    int i = indexOf(elmt);
-    if (i != -1) {
-      delete(i);
+    Node prevNode = (size() == 1) ? null : head;
+    Node current = head;
+    for (int i = 0; i < size(); i++) {
+      if (Objects.equals(current.elmt, elmt)) {
+        unlinkNext(prevNode);
+        length--;
+        return i;
+      }
+      prevNode = current;
+      current = current.next;
     }
 
-    return i;
+    return -1;
   }
 
   /* **************************************************************************
-   * Section: Helper Methods and Classes
+   * Section: Helper Classes and Methods
    ************************************************************************** */
 
-  private boolean inRange(int i) {
-    return i >= 0 && i < size();
+  private boolean isInRange(int i) {
+    return i >= 0 && i < length;
   }
 
-  private boolean inRange(int i, int include) {
-    return inRange(i) || i == include;
-  }
-
-  private Node getNode(int atIndex) {
+  private Node nodeAt(int index) {
     Node current = head;
-    for (int i = 0; i < atIndex; i++) {
+    for (int i = 0; i < index; i++) {
       current = current.next;
     }
     return current;
+  }
+
+  private Node unlinkNext(Node node) {
+    Node deletedNode;
+
+    if (node == null) {
+      deletedNode = head;
+      head = null;
+      tail = null;
+
+    } else {
+
+      deletedNode = node.next;
+      node.next = node.next.next;
+    }
+
+    return deletedNode;
   }
 
   private class Node {
@@ -410,7 +469,7 @@ public final class LinkedList<E> implements List<E> {
     }
   }
 
-  private class ListIterator implements Iterator<E> {
+  private class NodeIterator implements Iterator<E> {
     private Node current = head;
 
     @Override
