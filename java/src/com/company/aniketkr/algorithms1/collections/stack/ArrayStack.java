@@ -1,45 +1,54 @@
 package com.company.aniketkr.algorithms1.collections.stack;
 
-import java.util.Arrays;
+
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.function.Function;
 
-// TODO: docs under construction
 
 /**
- * Implements the {@link Stack} interface using an internal resizing array. The
- * internal array starts off with initial capacity {@value INIT_CAPACITY} if nothing
- * is explicitly specified.
+ * Implements the {@link Stack} interface using an internally resizing array.
+ * If nothing is explicitly specified, then the internal array starts off with capacity
+ * for {@value INIT_CAPACITY} elements. The internal array is guaranteed to be between
+ * 25% to 100% full at all times. The size of the array increases (or decreases) by a factor
+ * of 2.
  *
- * <p>This array is guaranteed to be between 25% to 100% full at all times. The size
- * of the array increases (or decreases) by a factor of 2.</p>
+ * <p>
+ * The <em>push</em> and the <em>pop</em> operations take constant amortized time, worst
+ * case time is <code>O(n)</code>. The operations <em>equals</em> and <em>contains</em> take
+ * <code>&theta;(n)</code> time. Operations to <em>copy</em> and <em>deepcopy</em> take
+ * <code>&theta;(n)</code> time, with <em>copy</em> operations being slightly faster. All
+ * other operations take constant time.
+ * </p>
  *
- * @param <E> The type of elements in the stack.
+ * @param <E> The type of element in the stack.
  * @author Aniket Kumar
  */
 public final class ArrayStack<E> implements Stack<E> {
-  private static final int INIT_CAPACITY = 8;
-  private E[] arr;
+  private static final int INIT_CAPACITY = 8;   // default initial capacity of stack
+  private E[] arr;                              // the stack
   private int head = 0;
 
   /**
-   * Initialize and return a new ArrayStack object.
-   * Default capacity is {@value INIT_CAPACITY}.
+   * Initialize and return a new {@link ArrayStack} object with default capacity
+   * for {@value INIT_CAPACITY} elements.
    */
   public ArrayStack() {
     this(INIT_CAPACITY);
   }
 
   /**
-   * Initialize and return a new ArrayStack object, ensuring capacity for
-   * {@code capacity} objects.
+   * Initialize and return a new ArrayStack object, ensuring capacity for {@code capacity}
+   * elements.
    *
    * @param capacity The number of elements that internal array should be able to
    *                 accommodate without needing to resize.
-   * @throws NegativeArraySizeException If {@code capacity} is negative.
+   * @throws IllegalArgumentException If {@code capacity} is less than or equal to 0.
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked")  // cast to generic array
   public ArrayStack(int capacity) {
+    if (capacity <= 0) throw new IllegalArgumentException("invalid capacity: " + capacity);
+
     arr = (E[]) new Object[capacity];
   }
 
@@ -48,17 +57,13 @@ public final class ArrayStack<E> implements Stack<E> {
    ************************************************************************** */
 
   /**
-   * Check if this stack is equal to the given object.
-   * Calls {@link Object#equals(Object that) equals()} on the elements to check if they
-   * are equal.
+   * {@inheritDoc}
    *
-   * @param obj The other object to check for equality.
-   * @return {@code true} if {@code obj} is semantically equal to this stack,
+   * @param obj The other Object to compare {@code this} with for equality.
+   * @return {@code true} if {@code obj} is equal to this stack,
    *     {@code false} otherwise.
-   * @implSpec As it currently stands, if two stack objects are empty, the {@code equals}
-   *     method will always return {@code true}. This happens as no elements are available
-   *     to compare.
    */
+  @Override
   public boolean equals(Object obj) {
     if (this == obj)                return true;
     if (obj == null)                return false;
@@ -77,14 +82,19 @@ public final class ArrayStack<E> implements Stack<E> {
   }
 
   /**
-   * Return a string representation of the stack. Primarily for debugging.
+   * Get a string representation of the stack.
+   * Primarily for debugging and helping find bugs in client code.
    *
    * @return A string.
    */
+  @Override
+  @SuppressWarnings("DuplicatedCode")
   public String toString() {
-    if (isEmpty()) return "ArrayStack[0] [ ]";
+    String className = this.getClass().getSimpleName();
 
-    StringBuilder sb = new StringBuilder("ArrayStack[").append(size()).append("] [ ");
+    if (isEmpty()) return className + "[0] [ ]";
+
+    StringBuilder sb = new StringBuilder(className).append("[").append(size()).append("] [ ");
     for (E elmt : this) {
       sb.append(elmt).append(", ");
     }
@@ -97,8 +107,7 @@ public final class ArrayStack<E> implements Stack<E> {
    ************************************************************************** */
 
   /**
-   * Get an iterator object that produces the elements of the stack in its natural
-   * order.
+   * Get an iterator that produces the elements of the stack in <em>FILO</em> order.
    *
    * @return An iterator.
    */
@@ -114,7 +123,7 @@ public final class ArrayStack<E> implements Stack<E> {
   /**
    * How many elements are present in the stack?
    *
-   * @return The count of number of elements in the stack.
+   * @return The count of elements present in the stack.
    */
   @Override
   public int size() {
@@ -134,9 +143,9 @@ public final class ArrayStack<E> implements Stack<E> {
   /**
    * Does {@code elmt} exist in the stack?
    *
-   * @param elmt The element to check for.
-   * @return {@code true} if {@code elmt} exists in the stack, {@code false}
-   *     otherwise.
+   * @param elmt The element to check existence of.
+   * @return {@code true} if {@code elmt} exists, {@code false} otherwise.
+   *
    * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
   @Override
@@ -152,7 +161,8 @@ public final class ArrayStack<E> implements Stack<E> {
   }
 
   /**
-   * Clear the stack of all its elements. Set it to its instantiated state.
+   * Clear the stack of all its elements.
+   * Sets all internal state members to their <em>default</em> initial state.
    */
   @Override
   @SuppressWarnings("unchecked")
@@ -162,9 +172,13 @@ public final class ArrayStack<E> implements Stack<E> {
   }
 
   /**
-   * Get a shallow copy of the stack.
+   * Return a shallow copy of the stack.
+   * A shallow copy creates a copy of the stack but not the elements in the
+   * stack.
    *
-   * @return A new stack.
+   * @return A shallow copy of the stack.
+   *
+   * @see #deepcopy(Function elmtCopyFunction)
    */
   @Override
   public Stack<E> copy() {
@@ -175,14 +189,40 @@ public final class ArrayStack<E> implements Stack<E> {
     return cp;
   }
 
+  /**
+   * Returns a deepcopy of the stack.
+   * A deepcopy creates a copy of the stack and populates it with copies of the
+   * original elements.
+   *
+   * @param copyFn A {@link Function} that takes original element as the
+   *               argument and returns a copy of that element.
+   * @return A deepcopy of the stack.
+   *
+   * @throws IllegalArgumentException If {@code copyFn} is {@code null}.
+   * @see #copy()
+   */
+  @Override
+  public Stack<E> deepcopy(Function<? super E, E> copyFn) {
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy is null");
+
+    ArrayStack<E> cp = new ArrayStack<>(size() * 2);
+
+    for (int i = 0; i < size(); i++) {
+      cp.arr[i] = copyFn.apply(this.arr[i]);
+    }
+    cp.head = this.head;
+
+    return cp;
+  }
+
   /* **************************************************************************
    * Section: Stack Methods
    ************************************************************************** */
 
   /**
-   * Push the element {@code elmt} onto the stack.
+   * Push the given element onto the stack.
    *
-   * @param elmt The element to push.
+   * @param elmt The new element to add to the stack.
    * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
   @Override
@@ -196,10 +236,11 @@ public final class ArrayStack<E> implements Stack<E> {
   }
 
   /**
-   * Pop/Remove the last inserted element off the stack.
+   * Pop the last pushed element off the stack.
    *
-   * @return The removed element.
-   * @throws NoSuchElementException If the stack is empty (underflow).
+   * @return The removed/popped element.
+   *
+   * @throws NoSuchElementException If the stack is empty; <em>underflow</em>.
    */
   @Override
   public E pop() {
@@ -214,10 +255,11 @@ public final class ArrayStack<E> implements Stack<E> {
   }
 
   /**
-   * Return the last inserted element from the stack, without removing it.
+   * Get the element that was last pushed onto the stack, without popping it off.
    *
-   * @return The last inserted element.
-   * @throws NoSuchElementException If the stack is empty (underflow).
+   * @return The last pushed element.
+   *
+   * @throws NoSuchElementException If the stack is empty; <em>underflow</em>.
    */
   @Override
   public E peek() {
@@ -230,6 +272,16 @@ public final class ArrayStack<E> implements Stack<E> {
    * Section: Helper Methods and Classes
    ************************************************************************** */
 
+  /**
+   * Resize the internal array to {@code newSize}.
+   * Creates a new array, copies over elements from the original array and then reassigns
+   * the new array in place of the original array.
+   *
+   * @param newSize The new desired capacity of the internal array, and hence the new capacity
+   *                of the stack.
+   * @implNote The method does <strong>NOT</strong> validate the argument passed to it in
+   *     any form.
+   */
   @SuppressWarnings("unchecked")
   private void resize(int newSize) {
     E[] newArr = (E[]) new Object[newSize];
@@ -237,14 +289,32 @@ public final class ArrayStack<E> implements Stack<E> {
     arr = newArr;
   }
 
+  /**
+   * An {@link Iterator} implementing class that iterates over the internal array in reverse.
+   * This essentially makes sure that the stack is iterated in <em>FILO</em> order.
+   */
   private class ReverseArrayIterator implements Iterator<E> {
-    private int current = head - 1;
+    private int current = head - 1;  // start with this index of arr
 
+    /**
+     * Can the iterator produce another value?
+     * Check if the iterator has been depleted, or not.
+     *
+     * @return {@code false} if the iterator has been depleted, otherwise {@code true}.
+     */
     @Override
     public boolean hasNext() {
       return current >= 0;
     }
 
+    /**
+     * Produce the next value from the iterator.
+     *
+     * @return The next value.
+     *
+     * @throws NoSuchElementException If {@code next()} is called after iterator has been
+     *                                depleted.
+     */
     @Override
     public E next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
@@ -252,6 +322,11 @@ public final class ArrayStack<E> implements Stack<E> {
       return arr[current--];
     }
 
+    /**
+     * Remove operation is not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
     @Override
     public void remove() {
       throw new UnsupportedOperationException("remove() not supported");
