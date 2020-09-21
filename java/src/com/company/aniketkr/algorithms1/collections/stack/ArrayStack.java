@@ -178,7 +178,7 @@ public final class ArrayStack<E> implements Stack<E> {
    *
    * @return A shallow copy of the stack.
    *
-   * @see #deepcopy(Function elmtCopyFunction)
+   * @see #deepcopy(Function copyFn)
    */
   @Override
   public Stack<E> copy() {
@@ -198,12 +198,17 @@ public final class ArrayStack<E> implements Stack<E> {
    *               argument and returns a copy of that element.
    * @return A deepcopy of the stack.
    *
-   * @throws IllegalArgumentException If {@code copyFn} is {@code null}.
+   * @throws IllegalArgumentException If {@code copyFn} is {@code null} or it
+   *                                  returns any {@code null} values.
    * @see #copy()
    */
   @Override
   public Stack<E> deepcopy(Function<? super E, E> copyFn) {
-    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy is null");
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
+    copyFn = copyFn.andThen(elmt -> {
+      if (elmt == null) throw new IllegalArgumentException("copyFn() mustn't return null values");
+      return elmt;
+    });
 
     ArrayStack<E> cp = new ArrayStack<>(size() * 2);
 

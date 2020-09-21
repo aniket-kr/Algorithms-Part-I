@@ -128,7 +128,8 @@ public interface Stack<E> extends Collection<E> {
    *               argument and returns a deepcopy of that element.
    * @return A deepcopy of the stack.
    *
-   * @throws IllegalArgumentException If {@code copyFn} is {@code null}.
+   * @throws IllegalArgumentException If {@code copyFn} is {@code null} or it
+   *                                  returns any {@code null} values.
    * @see #copy()
    */
   @Override
