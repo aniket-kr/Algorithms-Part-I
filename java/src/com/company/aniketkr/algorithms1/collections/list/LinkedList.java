@@ -6,11 +6,41 @@ import java.util.Objects;
 import java.util.function.Function;
 
 
+/**
+ * Implements the {@link List} interface as a singly linked list with nodes.
+ * Nodes are added as elements are <em>added</em>/<em>inserted</em> and removed
+ * as they are <em>removed</em>/<em>deleted</em>.
+ *
+ * <p>
+ * The <em>add</em> and <em>add-all</em> operations take constant and <code>&theta;(n)
+ * </code> time respectively. The <em>insert</em>, <em>insert-all</em>, <em>remove</em,
+ * <em>delete</em>, </><em>contains</em>, <em>equals</em> and <em>index-of</em>
+ * operations all take <code>&theta;(n)</code> time. If the upper and lower
+ * bounds are provided to the <em>index-of</em> operation, then the time taken is
+ * proportional to the number of elements that fall in the given range. The operations
+ * <em>get</em> and <em>set</em> also take <code>&theta;(n)</code> time. Operations
+ * to <em>copy</em> and <em>deepcopy</em> also take <code>&theta;(n)</code> time. All
+ * other operations take constant time.
+ * </p>
+ *
+ * <p>
+ * For all operations (barring <em>copy</em> and <em>deepcopy</em>), constant extra memory
+ * is used. It is strongly recommended to use the <em>addAll</em> and <em>insertAll</em>
+ * operations for inserting multiple values, over <em>add</em> and <em>insert</em>. These
+ * methods are internally optimised.
+ * </p>
+ *
+ * @param <E> The type of element in the list.
+ * @author Aniket Kumar
+ */
 public final class LinkedList<E> implements List<E> {
   private Node head;       // the first node in the list
   private Node tail;       // the last node in the list
   private int length = 0;  // number of nodes in the list
 
+  /**
+   * Initialize and return an empty LinkedList object.
+   */
   public LinkedList() {
     head = null;
     tail = null;
@@ -431,10 +461,23 @@ public final class LinkedList<E> implements List<E> {
    * Section: Helper Classes and Methods
    ************************************************************************** */
 
+  /**
+   * Is index {@code i} in the range <code>[0, {@link #size()})</code>?
+   *
+   * @param i The index to check for.
+   * @return {@code true} if {@code i} falls in range, {@code false} otherwise.
+   */
   private boolean isInRange(int i) {
     return i >= 0 && i < length;
   }
 
+  /**
+   * Get the node at the given index {@code index}.
+   * Does not validate the index; it is an internal private method.
+   *
+   * @param index The node with this index will be returned.
+   * @return The node with index {@code index}.
+   */
   private Node nodeAt(int index) {
     Node current = head;
     for (int i = 0; i < index; i++) {
@@ -443,6 +486,20 @@ public final class LinkedList<E> implements List<E> {
     return current;
   }
 
+  /**
+   * Given a {@link Node} object {@code node}, remove the node <code>node.next</code>
+   * from the linked list. <strong>The method does not change the value of the member field
+   * {@link #length}.</strong>
+   *
+   * <p>
+   * By the convention followed in the method, if {@code node} is {@code null}, it is assumed that
+   * the node to remove is the head and it is the last node in the list. For all other values, the
+   * particular node {@code node.next} is removed from the chain.
+   * </p>
+   *
+   * @param node The node which precedes the node to be removed/unlinked from the list.
+   * @return The now deleted/unlinked node.
+   */
   private Node unlinkNext(Node node) {
     Node deletedNode;
 
@@ -460,23 +517,48 @@ public final class LinkedList<E> implements List<E> {
     return deletedNode;
   }
 
+  /**
+   * Represents a single node in the singly linked list. Each node holds the client value
+   * in {@code elmt} field and a refernece to the next node in the linekd list in {@code next}
+   */
   private class Node {
-    E elmt;
-    Node next = null;
+    E elmt;             // holds the client value
+    Node next = null;   // reference to the next Node in list
 
+    /**
+     * Initialize and return a new Node object which holds {@code elmt} as the client
+     * value.
+     *
+     * @param elmt The client value to hold.
+     */
     Node(E elmt) {
       this.elmt = elmt;
     }
   }
 
+  /**
+   * A {@link Iterator} class that iterates over the nodes of a singly linekd list.
+   */
   private class NodeIterator implements Iterator<E> {
-    private Node current = head;
+    private Node current = head;  // start of the linked list
 
+    /**
+     * Can the iterator produce another value?
+     *
+     * @return {@code false} if the iterator has been depleted, otherwise {@code true}.
+     */
     @Override
     public boolean hasNext() {
       return current != null;
     }
 
+    /**
+     * Produce the next value from the iterator and return it.
+     *
+     * @return The next value.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
     @Override
     public E next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
@@ -486,6 +568,11 @@ public final class LinkedList<E> implements List<E> {
       return elmt;
     }
 
+    /**
+     * Remove not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
     @Override
     public void remove() {
       throw new UnsupportedOperationException("remove() not supported");
