@@ -2,30 +2,35 @@ package com.company.aniketkr.algorithms1.collections.deque;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.function.Function;
 
-// FIXME: under MAJOR construction
 
 /**
- * A deque (pronounced "deck") is a collection of objects such that we can access and
- * alter the elements from two ends - <em>front</em> and <em>back</em>. This implementation
- * of deque supports the usual <em>add</em>, <em>delete</em> and <em>peek</em> operations
- * from both ends.
+ * Implements the {@link Deque} interface using a doubly linked list. "Nodes"
+ * are added and removed as <em>add</em> and <em>delete</em> operations are called.
+ * Since every node holds references to two other nodes, it takes slightly more memory
+ * per element to store. While insignificant for smaller dequeues, this extra space can
+ * become significant for a moderately sized deque.
  *
- * <p>Apart from these operations, the <em>copy</em> method returns a {@link LinkedDeque} object.
- * The deque also supports iteration of elements in both directions - {@link Iterable} interface
- * supports iteration from <em>front</em> to <em>back</em> and the <em>reverse</em> method
- * supports it in the other direction.</p>
+ * <p>
+ * The <em>add</em> and <em>delete</em> operations from both the front and the back
+ * take constant time. Operations <em>contains</em> and <em>equals</em> take
+ * <code>&theta;(n)</code> time. The <em>copy</em> and <em>deepcopy</em> operations
+ * also take <code>&theta;(n)</code> time and extra space. All other operations take
+ * constant time.
+ * </p>
  *
- * @param <E> The type of elements in the deque.
+ * @param <E> The type of element in the deque.
  * @author Aniket Kumar
  */
 public final class LinkedDeque<E> implements Deque<E> {
-  private Node front;
-  private Node back;
-  private int length = 0;
+  private Node front;       // the first node in the deque
+  private Node back;        // the last node in the deque
+  private int length = 0;   // number of nodes in the deque
 
   /**
-   * Instantiate and return a new {@link LinkedDeque} object.
+   * Instantiate and return an empty {@link LinkedDeque} object.
    */
   public LinkedDeque() {
     front = null;
@@ -37,29 +42,24 @@ public final class LinkedDeque<E> implements Deque<E> {
    ************************************************************************** */
 
   /**
-   * Check if this deque is equal to the given object.
-   * Calls {@link Object#equals(Object that) equals()} on the elements to check if they
-   * are equal.
+   * {@inheritDoc}
    *
-   * @param obj The other object to check for equality.
-   * @return {@code true} if {@code obj} is a subclass of {@link LinkedDeque} and all the elements
-   *     in the deque are equal; {@code false} otherwise.
-   * @implNote As it currently stands, if two deque objects are empty, the {@code equals()}
-   *     method will always return {@code true}. This happens as no elements are available to
-   *     compare.
+   * @param obj The other Object to compare {@code this} with for equality.
+   * @return {@code true} if {@code obj} is equal to this deque,
+   *     {@code false} otherwise.
    */
+  @Override
   public boolean equals(Object obj) {
     if (obj == this)                return true;
     if (obj == null)                return false;
-    if (!(obj instanceof LinkedDeque))    return false;
-    LinkedDeque<?> that = (LinkedDeque<?>) obj;
+    if (!(obj instanceof Deque))    return false;
+    Deque<?> that = (Deque<?>) obj;
     if (this.size() != that.size()) return false;
 
     // compare each element
-    Iterator<E> itor1 = this.iterator();
-    Iterator<?> itor2 = that.iterator();
-    while (itor1.hasNext()) {
-      if (!itor1.next().equals(itor2.next())) {
+    Iterator<?> itor = that.iterator();
+    for (E elmt : this) {
+      if (!Objects.equals(itor.next(), elmt)) {
         return false;
       }
     }
@@ -67,21 +67,24 @@ public final class LinkedDeque<E> implements Deque<E> {
   }
 
   /**
-   * Return a string representation of the deque. Primarily for debugging.
+   * Get a string representation of the deque.
+   * Primarily for debugging and helping find bugs in client code.
    *
    * @return A string.
    */
+  @Override
+  @SuppressWarnings("DuplicatedCode")
   public String toString() {
-    if (isEmpty()) return "(F[ ]B)";
+    String className = this.getClass().getSimpleName();
 
-    StringBuilder sb = new StringBuilder("(F[ ");
+    if (isEmpty()) return className + "[0] [ ]";
+
+    StringBuilder sb = new StringBuilder(className).append("[").append(size()).append("] [ ");
     for (E elmt : this) {
-      sb.append(elmt);
-      sb.append(", ");
+      sb.append(elmt).append(", ");
     }
     sb.setLength(sb.length() - 2);
-    sb.append(" ]B)");
-    return sb.toString();
+    return sb.append(" ]B)").toString();
   }
 
   /* **************************************************************************
@@ -89,10 +92,12 @@ public final class LinkedDeque<E> implements Deque<E> {
    ************************************************************************** */
 
   /**
-   * Get an iterator object that produces the elements of the deque from <em>front</em>
-   * to <em>back</em>.
+   * Get an iterator that produces the elements of the deque from the front
+   * to the back.
    *
    * @return An iterator.
+   *
+   * @see #reverse()
    */
   @Override
   public Iterator<E> iterator() {
@@ -106,7 +111,7 @@ public final class LinkedDeque<E> implements Deque<E> {
   /**
    * How many elements are present in the deque?
    *
-   * @return The count of number of elements in the deque.
+   * @return The count of elements present in the deque.
    */
   @Override
   public int size() {
@@ -114,9 +119,9 @@ public final class LinkedDeque<E> implements Deque<E> {
   }
 
   /**
-   * Is the deque empty?
+   * How many elements are present in the deque?
    *
-   * @return {@code true} if deque is empty, {@code false} otherwise.
+   * @return The count of elements present in the deque.
    */
   @Override
   public boolean isEmpty() {
@@ -126,16 +131,13 @@ public final class LinkedDeque<E> implements Deque<E> {
   /**
    * Does {@code elmt} exist in the deque?
    *
-   * @param elmt The element to check for.
-   * @return {@code true} if {@code elmt} exists in the deque, {@code false}
-   *     otherwise.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   * @param elmt The element to check existence of.
+   * @return {@code true} if {@code elmt} exists, {@code false} otherwise.
    */
+  @Override
   public boolean contains(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to contains() is null");
-
     for (E dequeElmt : this) {
-      if (dequeElmt.equals(elmt)) {
+      if (Objects.equals(elmt, dequeElmt)) {
         return true;
       }
     }
@@ -143,7 +145,8 @@ public final class LinkedDeque<E> implements Deque<E> {
   }
 
   /**
-   * Clear the deque of all its elements. Set it to its instantiated state.
+   * Clear the deque of all its elements.
+   * Sets all internal state members to their <em>default</em> initial state.
    */
   @Override
   public void clear() {
@@ -153,27 +156,41 @@ public final class LinkedDeque<E> implements Deque<E> {
   }
 
   /**
-   * Get a shallow copy of the deque.
+   * Return a shallow copy of the deque.
+   * A shallow copy creates a copy of the deque but not the elements in the
+   * deque.
    *
-   * @return A new deque.
+   * @return A shallow copy of the deque.
+   *
+   * @see #deepcopy(Function copyFn)
    */
   @Override
-  public LinkedDeque<E> copy() {
-    LinkedDeque<E> cp = new LinkedDeque<>();
-    for (E elmt : this) {
-      cp.addBack(elmt);
-    }
-
-    return cp;
+  public Deque<E> copy() {
+    return deepcopy(Function.identity());
   }
 
   /**
-   * Get an iterable object that produces the elements from <em>back</em> to <em>front</em>.
+   * Returns a deepcopy of the deque.
+   * A deepcopy creates a copy of the deque and populates it with copies of the
+   * original elements.
    *
-   * @return An iterable.
+   * @param copyFn A {@link Function} that takes original element as the
+   *               argument and returns a deepcopy of that element.
+   * @return A deepcopy of the deque.
+   *
+   * @throws IllegalArgumentException If {@code copyFn} is {@code null}.
+   * @see #copy()
    */
-  public Iterable<E> reverse() {
-    return () -> new DoublyLinkedListIterator(back, false);
+  @Override
+  public Deque<E> deepcopy(Function<? super E, E> copyFn) {
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
+
+    LinkedDeque<E> cp = new LinkedDeque<>();
+    for (E elmt : this) {
+      cp.addBack(copyFn.apply(elmt));
+    }
+
+    return cp;
   }
 
   /* **************************************************************************
@@ -181,11 +198,23 @@ public final class LinkedDeque<E> implements Deque<E> {
    ************************************************************************** */
 
   /**
-   * Add the given element to the <em>front</em> of the deque.
+   * Get an iterable that produces the elements from the back to the front.
+   *
+   * @return An iterable.
+   *
+   * @see #iterator()
+   */
+  @Override
+  public Iterable<E> reverse() {
+    return () -> new DoublyLinkedListIterator(back, false);
+  }
+
+  /**
+   * Add {@code elmt} to the front of the deque.
    *
    * @param elmt The element to add.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
+  @Override
   public void addFront(E elmt) {
     if (elmt == null) throw new IllegalArgumentException("argument to addFront() is null");
 
@@ -204,11 +233,11 @@ public final class LinkedDeque<E> implements Deque<E> {
   }
 
   /**
-   * Add the given element to the <em>back</em> of the deque.
+   * Add {@code elmt} to the back of the deque.
    *
    * @param elmt The element to add.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
+  @Override
   public void addBack(E elmt) {
     if (elmt == null) throw new IllegalArgumentException("argument to addBack() is null");
 
@@ -227,9 +256,10 @@ public final class LinkedDeque<E> implements Deque<E> {
   }
 
   /**
-   * Delete and return the element at the <em>front</em> of the deque.
+   * Delete and return the element at the front of the deque.
    *
-   * @return The deleted element that was at the <em>front</em>.
+   * @return The deleted element that was at the front.
+   *
    * @throws NoSuchElementException If deque is empty (underflow).
    */
   @Override
@@ -252,11 +282,13 @@ public final class LinkedDeque<E> implements Deque<E> {
   }
 
   /**
-   * Delete and return the element at the <em>back</em> of the deque.
+   * Delete and return the element at the back of the deque.
    *
-   * @return The deleted element that was at the <em>back</em>.
+   * @return The deleted element that was at the back.
+   *
    * @throws NoSuchElementException If deque is empty (underflow).
    */
+  @Override
   public E delBack() {
     if (isEmpty()) throw new NoSuchElementException("Underflow: can't delete from empty deque");
 
@@ -276,12 +308,14 @@ public final class LinkedDeque<E> implements Deque<E> {
   }
 
   /**
-   * Return the element that was at the <em>front</em> of the deque, without
+   * Return the element that was at the front of the deque, without
    * deleting it.
    *
-   * @return The element that is at <em>front</em> of the deque.
+   * @return The element that is at front of the deque.
+   *
    * @throws NoSuchElementException If deque is empty (underflow).
    */
+  @Override
   public E front() {
     if (isEmpty()) throw new NoSuchElementException("Underflow: can't peek at empty deque");
 
@@ -289,12 +323,14 @@ public final class LinkedDeque<E> implements Deque<E> {
   }
 
   /**
-   * Return the element that was at the <em>back</em> of the deque, without
+   * Return the element that was at the back of the deque, without
    * deleting it.
    *
-   * @return The element that is at <em>back</em> of the deque.
+   * @return The element that is at back of the deque.
+   *
    * @throws NoSuchElementException If deque is empty (underflow).
    */
+  @Override
   public E back() {
     if (isEmpty()) throw new NoSuchElementException("Underflow: can't peek at empty deque");
 
@@ -306,29 +342,29 @@ public final class LinkedDeque<E> implements Deque<E> {
    ************************************************************************** */
 
   /**
-   * Represents a node in a doubly linked list. Holds the element and a reference to
-   * the prev and next nodes.
+   * Represents a node in a doubly linked list. Holds the element (client value) and a
+   * reference to the previous and next nodes.
    */
   private class Node {
-    E elmt;
-    Node prev = null;
-    Node next = null;
+    E elmt;             // holds the client value
+    Node prev = null;   // reference to the previous node in the list
+    Node next = null;   // reference to the next node in the list
   }
 
   /**
-   * An iterator class that supports iteration over a doubly linked list from
+   * An {@link Iterator} class that supports iteration over a doubly linked list from
    * either direction.
    */
   private class DoublyLinkedListIterator implements Iterator<E> {
-    private final boolean frontToBack;
-    private Node current;
+    private final boolean frontToBack;    // should the iterator go from front to back?
+    private Node current;                 // the node whose value client gets next
 
     /**
      * Instantiate and return a new {@link DoublyLinkedListIterator} object.
      *
      * @param startNode   The node to start iterating from.
-     * @param frontToBack Pass {@code true} if the iterator should move <em>front</em>
-     *                    from {@code startNode}, {@code false} for <em>backwards</em>.
+     * @param frontToBack Pass {@code true} if the iterator should move front
+     *                    from {@code startNode}, {@code false} for backwards.
      */
     private DoublyLinkedListIterator(Node startNode, boolean frontToBack) {
       this.frontToBack = frontToBack;

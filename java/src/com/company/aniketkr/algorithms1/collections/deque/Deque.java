@@ -11,7 +11,8 @@ import java.util.function.Function;
  * A deque (pronounced "deck") is a collection of objects such that we can access and
  * alter the elements from two ends - the <em>front</em> and the <em>back</em>. This
  * implementation of deque supports the usual <em>add</em>, <em>delete</em> and <em>peek</em>
- * operations from both ends. The collection allows {@code null} values as elements.
+ * operations from both ends. This interface guarantees allowing {@code null} values as
+ * elements.
  *
  * <p>
  * Apart from these operations, the <em>copy</em> method returns a {@link Deque} object.
