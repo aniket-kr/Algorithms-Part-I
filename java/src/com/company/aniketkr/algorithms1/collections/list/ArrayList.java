@@ -5,16 +5,16 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 
-// TODO: complete writing docs
 
-
+// FIXME: under construction
 /**
  * Implements the {@link List} interface using an internal resizing array.
  * The internal array starts off with initial capacity {@value INIT_CAPACITY} if
- * nothing is explicitly specified.
+d * nothing is explicitly specified. This array is guaranteed to be between 25% to
+ * 100% full at all times. The size of the array increases (or decreases) by a factor
+ * of 2.
  *
- * <p>This array is guaranteed to be between 25% to 100% full at all times. The
- * size of the array increases (or decreases) by a factor of 2.</p>
+ * // TODO: write about method performance here
  *
  * @param <E> The type of the elements in the list.
  * @author Aniket Kumar
@@ -58,9 +58,9 @@ public final class ArrayList<E> implements List<E> {
    */
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (!(obj instanceof List)) return false;
+    if (this == obj)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof List))     return false;
     List<?> that = (List<?>) obj;
     if (this.size() != that.size()) return false;
 
@@ -442,13 +442,51 @@ public final class ArrayList<E> implements List<E> {
   }
 
   /* **************************************************************************
+   * Section: Class Defined Methods
+   ************************************************************************** */
+
+  // TODO: write docs
+  public Iterable<E> range(int stop) {
+    return range(0, stop, 1);
+  }
+
+  // TODO: write docs
+  public Iterable<E> range(int start, int stop) {
+    return range(start, stop, 1);
+  }
+
+  // TODO: write docs
+  public Iterable<E> range(int start, int stop, int step) {
+    if (step == 0) throw new IllegalArgumentException("invalid step (= 0)");
+    if (!isInRange(start)) throw new IndexOutOfBoundsException("invalid start: " + start);
+
+    if (step > 0) {
+      if (!(isInRange(stop) || stop == size())) {
+        throw new IndexOutOfBoundsException("invalid stop: " + stop);
+      }
+
+      return () -> new StepArrayIterator(start, stop, step);
+
+    } else {
+
+      if (!(isInRange(stop) || stop == -1)) {
+        throw new IndexOutOfBoundsException("invalid stop: " + stop);
+      }
+
+      return () -> new StepArrayIterator(stop, start, step);
+    }
+  }
+
+  /* **************************************************************************
    * Section: Helper Classes and Methods
    ************************************************************************** */
 
   /**
-   * Resize the internal array to the new size.
+   * Resize the internal array to {@code newSize}.
+   * Resizing is achieved by copying the elements from the original array over to the
+   * newly created array with capacity {@code newSize}.
    *
-   * @param newSize The new size
+   * @param newSize The desired capacity of the new array.
    */
   @SuppressWarnings("unchecked")
   private void resize(int newSize) {
@@ -458,16 +496,37 @@ public final class ArrayList<E> implements List<E> {
   }
 
   /**
-   * shift the elements of internal array by delta spaces (both +ve or -ve).
+   * Shift the elements in the internal array over by {@code delta} positions, starting
+   * from index {@code fromIndex}.
+   * <p>
+   * <b>Notes:</b>
+   * <ol>
+   *   <li>
+   *     It is assumed that the internal array has the required capacity to shift over the
+   *     elements, in case of positive value of {@code delta}.
+   *   </li>
+   *   <li>The method <b>DOES NOT</b> mutate the value of field {@link #length}.</li>
+   * </ol>
+   * </p>
    *
-   * @param fromIndex Start shifting from (including this)
-   * @param delta     number of positions to shift to the right; if -ve then shifts left.
+   * @param fromIndex The index to start shifting elements from (inclusive).
+   * @param delta     The number of positions all elements starting from index {@code fromIndex}
+   *                  should be shifted to the <b>right</b> by. If this value is negative, all
+   *                  elements starting {@code fromIndex} are shifted to the <b>left</b>.
    */
   private void shift(int fromIndex, int delta) {
     // assume there is always enough space in the array
     System.arraycopy(arr, fromIndex, arr, fromIndex + delta, size() - fromIndex);
   }
 
+  /**
+   * Simulates the process of "doubling array size" to determine the final size at which
+   * all the elements will fit in the internal array.
+   *
+   * @param delta The number of new elements being added.
+   * @return The new size of the array, if the current size is sufficient then it is
+   *     returned.
+   */
   private int calcCapacity(int delta) {
     // `posRequired`  -> total positions required
     // `posAvailable` -> total positions available
@@ -477,37 +536,74 @@ public final class ArrayList<E> implements List<E> {
     while (posAvailable < posRequired) {
       posAvailable *= 2;
     }
-
     return posAvailable;
   }
 
+  /**
+   * Is the index {@code i} in the range <code>[0, {@link #size()})</code>?
+   *
+   * @param i The index to verify.
+   * @return {@code true} if {@code i} is in range, {@code false} otherwise.
+   */
   private boolean isInRange(int i) {
     return i >= 0 && i < size();
   }
 
+  /**
+   * An {@link Iterator} class that iterates over the elements of an array based on given
+   * <em>start</em> and <em>stop</em> indices. The <em>step-size</em> can also be configured.
+   */
   private class StepArrayIterator implements Iterator<E> {
-    private final int stop;
-    private final int step;
-    private int current;
+    private final int stop;     // stop at this index (exclusive)
+    private final int step;     // iterate over every `step`-th index
+    private int current;        // the current position of iterator
 
+    /**
+     * Initialize and return a new StepArrayIterator object that iterates over every
+     * {@code step} elements in the {@link #arr}, between {@code low} and {@code high}.
+     *
+     * <p>
+     * If {@code step} is greater than 0, then iterates from {@code low} (inclusive) to
+     * {@code high} (exclusive). For {@code step} less than 0, iteration happens from
+     * {@code high} (inclusive) to {@code low} (exclusive).
+     * </p>
+     *
+     * @param low  The lower of the two indices.
+     * @param high The higher of the two indices.
+     * @param step Iterate over every {@code step} element in the array.
+     * @throws IllegalArgumentException If {@code step} is 0.
+     */
     private StepArrayIterator(int low, int high, int step) {
-      if (step == 0) throw new IllegalArgumentException("invalid step (= 0)");
+      this.step = step;
 
       if (step < 0) {
         current = high;
         stop = low;
-      } else {
+      } else if (step > 0) {
         current = low;
         stop = high;
       }
-      this.step = step;
+
+      throw new IllegalArgumentException("invalid step (= 0)");
     }
 
+    /**
+     * Can the iterator produce another value?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code true} otherwise.
+     */
     @Override
     public boolean hasNext() {
       return (step > 0) ? (current < stop) : (current > stop);
     }
 
+    /**
+     * Produce the next value from the iterator and return it.
+     *
+     * @return The next value.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
     @Override
     public E next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
@@ -517,6 +613,11 @@ public final class ArrayList<E> implements List<E> {
       return elmt;
     }
 
+    /**
+     * Remove not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
     @Override
     public void remove() {
       throw new UnsupportedOperationException("remove() not supported");
