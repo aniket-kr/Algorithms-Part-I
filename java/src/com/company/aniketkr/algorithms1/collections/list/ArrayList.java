@@ -1,10 +1,12 @@
 package com.company.aniketkr.algorithms1.collections.list;
 
-
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.function.Function;
 
-// FIXME: docs under construction
+// TODO: complete writing docs
+
 
 /**
  * Implements the {@link List} interface using an internal resizing array.
@@ -18,39 +20,29 @@ import java.util.NoSuchElementException;
  * @author Aniket Kumar
  */
 public final class ArrayList<E> implements List<E> {
-  private static final int INIT_CAPACITY = 8;
-  private E[] arr;
-  private int length = 0;
+  private static final int INIT_CAPACITY = 8;   // default capacity of internal array
+  private E[] arr;                              // array that holds the list
+  private int length = 0;                       // the length of the list
 
   /**
-   * Initialize and return a new ArrayList object. Default
-   * capacity is {@value INIT_CAPACITY}.
+   * Initialize and return an empty ArrayList object.
+   * The default capacity is {@value INIT_CAPACITY}.
    */
   public ArrayList() {
     this(INIT_CAPACITY);
   }
 
   /**
-   * Initialize and return a new ArrayList object, ensuring capacity for
-   * {@code capacity} objects.
+   * Initialize and return an empty ArrayList object, with capacity for
+   * {@code capacity} elements.
    *
-   * @param capacity The number of elements that internal array should be able to
-   *                 accommodate without needing to resize.
-   * @throws NegativeArraySizeException If {@code capacity} is negative.
+   * @param capacity The number of elements the list should be able to hold
+   *                 before having to resize.
+   * @throws IllegalArgumentException If {@code capacity} is less than or equal to 0.
    */
   @SuppressWarnings("unchecked")
   public ArrayList(int capacity) {
     arr = (E[]) new Object[capacity];
-  }
-
-  /**
-   * Initialize and return a new ArrayList object and add all the elements of
-   * {@code array} to the list.
-   *
-   * @param array The array whose elements will be added to the list.
-   */
-  public ArrayList(Object[] array) {
-    // TODO: Implement this after deciding what to do with null values
   }
 
   /* **************************************************************************
@@ -58,30 +50,24 @@ public final class ArrayList<E> implements List<E> {
    ************************************************************************** */
 
   /**
-   * Check if this list is equal to the given object.
-   * Calls {@link Object#equals(Object that) equals()} on the elements to check if they
-   * are equal.
+   * {@inheritDoc}
    *
-   * @param obj The other object to check for equality.
-   * @return {@code true} if {@code obj} is semantically equal to this list,
+   * @param obj The other Object to compare {@code this} with for equality.
+   * @return {@code true} if {@code obj} is equal to this list,
    *     {@code false} otherwise.
-   * @implSpec As it currently stands, if two list objects are empty, the {@code equals}
-   *     method will always return {@code true}. This happens as no elements are available
-   *     to compare.
    */
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)                return true;
-    if (obj == null)                return false;
-    if (!(obj instanceof List))     return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!(obj instanceof List)) return false;
     List<?> that = (List<?>) obj;
     if (this.size() != that.size()) return false;
 
-    // check all elements
-    Iterator<E> itor1 = this.iterator();
-    Iterator<?> itor2 = that.iterator();
-    while (itor1.hasNext()) {
-      if (!itor1.next().equals(itor2.next())) {
+    // compare all elements
+    Iterator<?> itor = that.iterator();
+    for (E elmt : this) {
+      if (!Objects.equals(elmt, itor.next())) {
         return false;
       }
     }
@@ -89,21 +75,24 @@ public final class ArrayList<E> implements List<E> {
   }
 
   /**
-   * Return a string representation of the list. Primarily for debugging.
+   * Get a string representation of the list.
+   * Primarily for debugging and helping find bugs in client code.
    *
    * @return A string.
    */
+  @Override
+  @SuppressWarnings("DuplicatedCode")
   public String toString() {
-    if (isEmpty()) return "[ ]";
+    String className = this.getClass().getSimpleName();
 
-    StringBuilder sb = new StringBuilder("[ ");
+    if (isEmpty()) return className + "[0] [ ]";
+
+    StringBuilder sb = new StringBuilder(className).append("[").append(size()).append("] [ ");
     for (E elmt : this) {
-      sb.append(elmt);
-      sb.append(", ");
+      sb.append(elmt).append(", ");
     }
     sb.setLength(sb.length() - 2);
-    sb.append(" ]");
-    return sb.toString();
+    return sb.append(" ]").toString();
   }
 
   /* **************************************************************************
@@ -111,27 +100,14 @@ public final class ArrayList<E> implements List<E> {
    ************************************************************************** */
 
   /**
-   * Get an iterator object that produces the elements of the list in its natural
-   * order.
+   * Get an iterator that produces the elements of the list in increasing order of
+   * their indices.
    *
    * @return An iterator.
    */
   @Override
   public Iterator<E> iterator() {
     return new StepArrayIterator(0, size(), 1);
-  }
-
-  public Iterable<E> range(int from, int to, int step) {
-    if (step == 0) throw new IllegalArgumentException("step size cannot be 0");
-
-    if (step > 0 && inRange(from) && inRange(to, size())) {
-      return () -> new StepArrayIterator(from, to, step);
-    } else if (step < 0 && inRange(from) && inRange(to, -1)) {
-      // FIXME: range() doesn't work for negative "step"
-      return () -> new StepArrayIterator(to, from, step);
-    }
-
-    throw new IndexOutOfBoundsException(String.format("invalid index pair: %d, %d", from, to));
   }
 
   /* **************************************************************************
@@ -141,7 +117,7 @@ public final class ArrayList<E> implements List<E> {
   /**
    * How many elements are present in the list?
    *
-   * @return The count of number of elements in the list.
+   * @return The count of elements present in the list.
    */
   @Override
   public int size() {
@@ -155,26 +131,23 @@ public final class ArrayList<E> implements List<E> {
    */
   @Override
   public boolean isEmpty() {
-    return length == 0;
+    return size() == 0;
   }
 
-
   /**
-   * Does the element {@code elmt} exist in the list?
+   * Does {@code elmt} exist in the list?
    *
-   * @param elmt The element.
-   * @return {@code true} if {@code elmt} exists in the list, {@code false} otherwise.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   * @param elmt The element to check existence of.
+   * @return {@code true} if {@code elmt} exists, {@code false} otherwise.
    */
   @Override
   public boolean contains(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to contains is null");
-
     return indexOf(elmt) != -1;
   }
 
   /**
-   * Clear the list of all its elements. Set it to its instantiated state.
+   * Clear the list of all its elements.
+   * Sets all internal state members to their <em>default</em> initial state.
    */
   @Override
   @SuppressWarnings("unchecked")
@@ -184,13 +157,45 @@ public final class ArrayList<E> implements List<E> {
   }
 
   /**
-   * Get a shallow copy of the list.
+   * Return a shallow copy of the list.
+   * A shallow copy creates a copy of the list but not the elements in the
+   * list.
    *
-   * @return A new list.
+   * @return A shallow copy of the list.
+   *
+   * @see #deepcopy(Function copyFn)
    */
   @Override
   public List<E> copy() {
-    return null;
+    ArrayList<E> cp = new ArrayList<>((this.size() >= 2) ? this.size() * 2 : INIT_CAPACITY);
+    System.arraycopy(this.arr, 0, cp.arr, 0, this.size());
+    cp.length = this.length;
+
+    return cp;
+  }
+
+  /**
+   * Returns a deepcopy of the list.
+   * A deepcopy creates a copy of the list and populates it with copies of the
+   * original elements.
+   *
+   * @param copyFn A {@link Function} that takes original element as the
+   *               argument and returns a deepcopy of that element.
+   * @return A deepcopy of the list.
+   *
+   * @throws IllegalArgumentException If {@code copyFn} is {@code null}.
+   * @see #copy()
+   */
+  @Override
+  public List<E> deepcopy(Function<? super E, E> copyFn) {
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
+
+    ArrayList<E> cp = new ArrayList<>((this.size() >= 2) ? this.size() * 2 : INIT_CAPACITY);
+    for (E elmt : this) {
+      cp.add(copyFn.apply(elmt));
+    }
+
+    return cp;
   }
 
   /* **************************************************************************
@@ -198,14 +203,13 @@ public final class ArrayList<E> implements List<E> {
    ************************************************************************** */
 
   /**
-   * Add the given element {@code elmt} to the end of the list.
+   * Add {@code elmt} to the end of the list.
    *
    * @param elmt The element.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   * @see #insert(int atIndex, E elmt)
    */
   @Override
   public void add(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to add() is null");
     if (size() == arr.length) {
       resize(arr.length * 2);
     }
@@ -214,18 +218,53 @@ public final class ArrayList<E> implements List<E> {
   }
 
   /**
-   * Insert the given element {@code elmt} at the index {@code atIndex}.
+   * Add all the elements in {@code elmts} array to the end of the list.
    *
-   * @param elmt    The element.
-   * @param atIndex The index to insert at.
-   * @throws IllegalArgumentException  If {@code elmt} is {@code null}.
-   * @throws IndexOutOfBoundsException If {@code atIndex} is not in range <code>
-   *                                   [0, {@link #size()})</code>.
+   * @param elmts The array with elements to add.
+   * @throws IllegalArgumentException If {@code elmts} is {@code null}.
+   * @see #insertAll(int fromIndex, E[] elmts)
    */
   @Override
-  public void add(E elmt, int atIndex) {
-    if (elmt == null) throw new IllegalArgumentException("1st argument to add() is null");
-    if (!inRange(atIndex)) throw new IndexOutOfBoundsException("invalid index: " + atIndex);
+  public void addAll(E[] elmts) {
+    if (elmts == null) throw new IllegalArgumentException("argument to addAll() is null");
+    if (arr.length - size() < elmts.length) {
+      resize(elmts.length + arr.length);
+    }
+
+    System.arraycopy(elmts, 0, arr, length, elmts.length);
+    length += elmts.length;
+  }
+
+  /**
+   * Add all the elements produced by {@code elmts}, to the end of the
+   * list.
+   *
+   * @param elmts The iterable that produces elements to add.
+   * @throws IllegalArgumentException If {@code elmts}, or any of the elements it
+   *                                  produces, is {@code null}.
+   * @see #insertAll(int fromIndex, Iterable elmts)
+   */
+  @Override
+  public void addAll(Iterable<? extends E> elmts) {
+    if (elmts == null) throw new IllegalArgumentException("argument to addAll() is null");
+
+    for (E elmt : elmts) {
+      add(elmt);
+    }
+  }
+
+  /**
+   * Insert the given element {@code elmt} at the index {@code atIndex}.
+   *
+   * @param atIndex The index to insert at.
+   * @param elmt    The element.
+   * @throws IndexOutOfBoundsException If {@code atIndex} is not in range <code>
+   *                                   [0, {@link #size()})</code>.
+   * @see #add(E elmt)
+   */
+  @Override
+  public void insert(int atIndex, E elmt) {
+    if (!isInRange(atIndex)) throw new IllegalArgumentException("invalid index: " + atIndex);
     if (size() == arr.length) {
       resize(arr.length * 2);
     }
@@ -236,87 +275,92 @@ public final class ArrayList<E> implements List<E> {
   }
 
   /**
-   * Add all the elements in the array {@code elmts} to the end of the list.
-   *
-   * @param elmts The array of elements to add.
-   * @throws IllegalArgumentException If either {@code elmts} or any of its elements is
-   *                                  {#code null}.
-   */
-  @Override
-  public void addAll(E[] elmts) {
-    // TODO: Implement this after deciding what to do with null values
-  }
-
-  /**
-   * Insert all the elements in the array {@code elmts} to the list, starting from
+   * Insert all the elements in {@code elmts} into the list, starting from
    * the index {@code fromIndex}.
    *
-   * @param elmts     The array of elements to insert.
    * @param fromIndex The index at which the first element from {@code elmts}
    *                  should appear.
-   * @throws IllegalArgumentException  If {@code elmts} or any of its elements is
-   *                                   {@code null}.
+   * @param elmts     The array of elements to insert.
+   * @throws IllegalArgumentException  If {@code elmts} is {@code null}.
    * @throws IndexOutOfBoundsException If {@code fromIndex} is not in range <code>
    *                                   [0, {@link #size()})</code>.
+   * @see #addAll(E[] elmts)
    */
   @Override
-  public void addAll(E[] elmts, int fromIndex) {
-    // TODO: Implement this after deciding what to do with null values
+  public void insertAll(int fromIndex, E[] elmts) {
+    if (!isInRange(fromIndex)) throw new IndexOutOfBoundsException("invalid index: " + fromIndex);
+    if (elmts == null) throw new IllegalArgumentException("2nd argument to insertAll() is null");
+
+    // make space, if needed
+    int expectedSize = calcCapacity(elmts.length);
+    if (expectedSize > arr.length) {
+      resize(expectedSize);
+    }
+
+    shift(fromIndex, elmts.length);
+    System.arraycopy(elmts, 0, arr, fromIndex, elmts.length);
+    length += elmts.length;
   }
 
   /**
-   * Add all the elements produced by the iterable {@code elmts}, to the end of the
-   * list.
-   *
-   * @param elmts The iterable that produces elements to add.
-   * @throws IllegalArgumentException If {@code elmts}, or any of the elements it
-   *                                  produces, is {@code null}.
-   */
-  @Override
-  public void addAll(Iterable<? extends E> elmts) {
-    // TODO: Implement this after deciding what to do with null values
-  }
-
-  /**
-   * Insert all the elements produced by the iterable {@code elmts} to the list, starting
+   * Insert all the elements produced by {@code elmts} into the list, starting
    * from the index {#code fromIndex}.
    *
-   * @param elmts     The iterable that produces elements to insert.
-   * @param fromIndex The index at which the first element produced by {#code elmts}
+   * @param fromIndex The index at which the first element produced by {@code elmts}
    *                  should appear.
-   * @throws IllegalArgumentException  If {@code elmts}, or any of the elements it
-   *                                   produces, is {@code null}.
+   * @param elmts     The iterable that produces elements to insert.
+   * @throws IllegalArgumentException  If {@code elmts} is {@code null}.
    * @throws IndexOutOfBoundsException If {@code fromIndex} is not in range <code>
    *                                   [0, {@link #size()})</code>.
+   * @see #addAll(Iterable elmts)
    */
   @Override
-  public void addAll(Iterable<? extends E> elmts, int fromIndex) {
-    // TODO: Implement this after deciding what to do with null values
+  public void insertAll(int fromIndex, Iterable<? extends E> elmts) {
+    if (!isInRange(fromIndex)) throw new IndexOutOfBoundsException("invalid index: " + fromIndex);
+    if (elmts == null) throw new IllegalArgumentException("2nd argument to insertAll() is null");
+
+    // FIXME: don't currently understand how to "EFFICIENTLY" insert when final length is
+    //  not available
   }
 
   /**
-   * Get the element at the index {@code index} in the list.
+   * Get element from the list, whose index is {@code index}.
    *
    * @param index The index.
    * @return The element at {@code index}.
+   *
    * @throws IndexOutOfBoundsException If {@code index} is not in range <code>
    *                                   [0, {@link #size()})</code>.
    */
   @Override
   public E get(int index) {
-    if (!inRange(index)) throw new IndexOutOfBoundsException("invalid index: " + index);
+    if (!isInRange(index)) throw new IndexOutOfBoundsException("invalid index: " + index);
 
     return arr[index];
   }
 
   /**
-   * Get the index of the first occurrence of {@code elmt} in the list. Uses elements'
-   * {@link Object#equals(Object obj) equals} implementation to check if {@code elmt}
-   * is equals to any of them.
+   * Set {@code elmt} at index {@code index}.
+   * The old value stored at the given index is discarded.
+   *
+   * @param index The index to change value at.
+   * @param elmt  The new element.
+   * @throws IndexOutOfBoundsException If {@code index} is not in range <code>
+   *                                   [0, {@link #size()})</code>.
+   */
+  @Override
+  public void set(int index, E elmt) {
+    if (!isInRange(index)) throw new IndexOutOfBoundsException("invalid index: " + index);
+
+    arr[index] = elmt;
+  }
+
+  /**
+   * Get the index of the first occurrence of {@code elmt} in the list.
    *
    * @param elmt The element to look for.
-   * @return The index of first occurrence of {@code elmt} in the list; {@literal -1}
-   *     if {@code elmt} does not exist in the list.
+   * @return The index of first occurrence of {@code elmt} in the list; -1 if
+   *     {@code elmt} does not exist in the list.
    */
   @Override
   public int indexOf(E elmt) {
@@ -326,28 +370,27 @@ public final class ArrayList<E> implements List<E> {
   /**
    * Get the index of the first occurrence of {@code elmt} between indices {@code fromIndex}
    * and {@code toIndex}.
+   * If {@code fromIndex} happens to be larger than or equal to {@code toIndex}, then -1
+   * is returned.
    *
    * @param elmt      The element to look for.
    * @param fromIndex The index to start looking at (inclusive).
    * @param toIndex   The index to look upto (exclusive).
    * @return The index of the first occurrence of {@code elmt} in the range, {@literal -1}
    *     if {@code elmt} does not exist in the given range.
-   * @throws IllegalArgumentException  If {@code elmt} is {@code null}.
+   *
    * @throws IndexOutOfBoundsException If either {@code fromIndex} or {@code toIndex} is
-   *                                   not in range <code>[0, {@link #size()})</code>.
-   * @implSpec If no elements fall in the range specified by {@code fromIndex} and
-   *     {@code toIndex}, then {@literal -1} is returned.
+   *                                   not in range <code>[0, {@link #size()}]</code>.
    */
   @Override
   public int indexOf(E elmt, int fromIndex, int toIndex) {
-    if (elmt == null) throw new IllegalArgumentException("argument to indexOf() is null");
-    if (!inRange(fromIndex)) throw new IndexOutOfBoundsException("invalid fromIndex: " + fromIndex);
-    if (!(inRange(toIndex) || toIndex == size())) {
-      throw new IndexOutOfBoundsException("invalid toIndex: " + toIndex);
+    if (!isInRange(fromIndex)) throw new IndexOutOfBoundsException("invalid from: " + fromIndex);
+    if (!(isInRange(toIndex) || toIndex == size())) {
+      throw new IndexOutOfBoundsException("invalid to: " + toIndex);
     }
 
     for (int i = fromIndex; i < toIndex; i++) {
-      if (arr[i].equals(elmt)) {
+      if (Objects.equals(elmt, arr[i])) {
         return i;
       }
     }
@@ -359,19 +402,20 @@ public final class ArrayList<E> implements List<E> {
    *
    * @param index The index to delete element at.
    * @return The deleted element.
+   *
    * @throws IndexOutOfBoundsException If {@code index} is not in range <code>
-   *                                   [0, {@link #size()}</code>.
+   *                                   [0, {@link #size()})</code>.
+   * @see #remove(E elmt)
    */
   @Override
   public E delete(int index) {
-    if (!inRange(index)) throw new IndexOutOfBoundsException("invalid index: " + index);
     if (size() == arr.length / 4) {
       resize(arr.length / 2);
     }
 
-    E elmt = get(index);
-    shift(index + 1, -1);
-    arr[--length] = null;
+    E elmt = arr[index];
+    shift(index, -1);
+    arr[length--] = null;
 
     return elmt;
   }
@@ -381,17 +425,18 @@ public final class ArrayList<E> implements List<E> {
    * index.
    *
    * @param elmt The element to remove.
-   * @return The index of the now removed element; {@literal -1} if {@code elmt} did not
-   *     exist in the list.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
+   * @return The index of the now removed element; -1 if {@code elmt} did not exist in
+   *     the list.
+   *
+   * @see #delete(int index)
    */
   @Override
   public int remove(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to remove() is null");
-
     int i = indexOf(elmt);
-    if (i >= 0) {
-      delete(i);
+
+    if (i != -1) {
+      shift(i, -1);
+      arr[length--] = null;
     }
     return i;
   }
@@ -401,31 +446,9 @@ public final class ArrayList<E> implements List<E> {
    ************************************************************************** */
 
   /**
-   * Is the index {@code i} in range <code>[0, {@link #size()})</code> w.r.t. the
-   * current state of the list?
+   * Resize the internal array to the new size.
    *
-   * @param i The index to verify.
-   * @return {@code true} if {@code i} lies in range, {@code false} otherwise.
-   */
-  private boolean inRange(int i) {
-    return i >= 0 && i < size();
-  }
-
-  /**
-   * Is the index {@code i} in range <code>[0, {@link #size()}) &cup; set{include}</code>
-   * w.r.t. the current state of the list?
-   *
-   * @param i The index to verify.
-   * @return {@code true} if {@code i} lies in range, {@code false} otherwise.
-   */
-  private boolean inRange(int i, int include) {
-    return inRange(i) || i == include;
-  }
-
-  /**
-   * Resize the internal array to the given size and copy over all the elements.
-   *
-   * @param newSize The new size of the internal array.
+   * @param newSize The new size
    */
   @SuppressWarnings("unchecked")
   private void resize(int newSize) {
@@ -435,14 +458,31 @@ public final class ArrayList<E> implements List<E> {
   }
 
   /**
-   * Shift the elements of the internal array {@link #arr} over by {@code delta} indices
-   * starting from the index {@code i}.
+   * shift the elements of internal array by delta spaces (both +ve or -ve).
    *
-   * @param i     The index to starting shifting elements from (inclusive).
-   * @param delta The number of empty spaces to make starting index {@code i}.
+   * @param fromIndex Start shifting from (including this)
+   * @param delta     number of positions to shift to the right; if -ve then shifts left.
    */
-  private void shift(int i, int delta) {
-    System.arraycopy(arr, i, arr, i + delta, size() - i);
+  private void shift(int fromIndex, int delta) {
+    // assume there is always enough space in the array
+    System.arraycopy(arr, fromIndex, arr, fromIndex + delta, size() - fromIndex);
+  }
+
+  private int calcCapacity(int delta) {
+    // `posRequired`  -> total positions required
+    // `posAvailable` -> total positions available
+    int posRequired = delta + size();
+    int posAvailable = arr.length;
+
+    while (posAvailable < posRequired) {
+      posAvailable *= 2;
+    }
+
+    return posAvailable;
+  }
+
+  private boolean isInRange(int i) {
+    return i >= 0 && i < size();
   }
 
   private class StepArrayIterator implements Iterator<E> {
@@ -450,15 +490,22 @@ public final class ArrayList<E> implements List<E> {
     private final int step;
     private int current;
 
-    private StepArrayIterator(int start, int stop, int step) {
-      this.current = start;
-      this.stop = stop;
+    private StepArrayIterator(int low, int high, int step) {
+      if (step == 0) throw new IllegalArgumentException("invalid step (= 0)");
+
+      if (step < 0) {
+        current = high;
+        stop = low;
+      } else {
+        current = low;
+        stop = high;
+      }
       this.step = step;
     }
 
     @Override
     public boolean hasNext() {
-      return current < stop;
+      return (step > 0) ? (current < stop) : (current > stop);
     }
 
     @Override

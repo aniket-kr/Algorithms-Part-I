@@ -59,9 +59,9 @@ public final class LinkedList<E> implements List<E> {
    */
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (!(obj instanceof List)) return false;
+    if (this == obj)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof List))     return false;
     List<?> that = (List<?>) obj;
     if (this.size() != that.size()) return false;
 
@@ -288,7 +288,7 @@ public final class LinkedList<E> implements List<E> {
   @Override
   @SuppressWarnings("DuplicatedCode")  // insertAll() overload
   public void insertAll(int fromIndex, E[] elmts) {
-    if (elmts == null) throw new IllegalArgumentException("1st argument to insertAll() is null");
+    if (elmts == null)         throw new IllegalArgumentException("1st argument to insertAll() is null");
     if (!isInRange(fromIndex)) throw new IndexOutOfBoundsException("invalid index: " + fromIndex);
 
     Node prevNode = (fromIndex == 0) ? head : nodeAt(fromIndex - 1);
@@ -319,7 +319,7 @@ public final class LinkedList<E> implements List<E> {
   @Override
   @SuppressWarnings("DuplicatedCode")  // insertAll() overload
   public void insertAll(int fromIndex, Iterable<? extends E> elmts) {
-    if (elmts == null) throw new IllegalArgumentException("1st argument to insertAll() is null");
+    if (elmts == null)         throw new IllegalArgumentException("1st argument to insertAll() is null");
     if (!isInRange(fromIndex)) throw new IndexOutOfBoundsException("invalid index: " + fromIndex);
 
     Node prevNode = (fromIndex == 0) ? head : nodeAt(fromIndex - 1);
@@ -519,7 +519,7 @@ public final class LinkedList<E> implements List<E> {
 
   /**
    * Represents a single node in the singly linked list. Each node holds the client value
-   * in {@code elmt} field and a refernece to the next node in the linekd list in {@code next}
+   * in {@code elmt} field and a reference to the next node in the linked list in {@code next}
    */
   private class Node {
     E elmt;             // holds the client value
@@ -537,7 +537,7 @@ public final class LinkedList<E> implements List<E> {
   }
 
   /**
-   * A {@link Iterator} class that iterates over the nodes of a singly linekd list.
+   * A {@link Iterator} class that iterates over the nodes of a singly linked list.
    */
   private class NodeIterator implements Iterator<E> {
     private Node current = head;  // start of the linked list

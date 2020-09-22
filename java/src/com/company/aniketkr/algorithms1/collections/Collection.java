@@ -43,6 +43,7 @@ public interface Collection<E> extends Iterable<E> {
    * @return {@code true} if {@code obj} is equal to this collection,
    *     {@code false} otherwise.
    */
+  @Override
   boolean equals(Object obj);
 
   /**
@@ -51,6 +52,7 @@ public interface Collection<E> extends Iterable<E> {
    *
    * @return A string.
    */
+  @Override
   String toString();
 
   /* **************************************************************************
