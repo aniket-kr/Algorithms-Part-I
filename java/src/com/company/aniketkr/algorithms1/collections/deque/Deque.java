@@ -4,109 +4,80 @@ import com.company.aniketkr.algorithms1.collections.Collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.function.Function;
+
 
 /**
  * A deque (pronounced "deck") is a collection of objects such that we can access and
- * alter the elements from two ends - <em>front</em> and <em>back</em>. This implementation
- * of deque supports the usual <em>add</em>, <em>delete</em> and <em>peek</em> operations
- * from both ends.
+ * alter the elements from two ends - the <em>front</em> and the <em>back</em>. This
+ * implementation of deque supports the usual <em>add</em>, <em>delete</em> and <em>peek</em>
+ * operations from both ends. The collection allows {@code null} values as elements.
  *
- * <p>Apart from these operations, the <em>copy</em> method returns a {@link Deque} object.
+ * <p>
+ * Apart from these operations, the <em>copy</em> method returns a {@link Deque} object.
  * The deque also supports iteration of elements in both directions - {@link Iterable} interface
- * supports iteration from <em>front</em> to <em>back</em> and the <em>reverse</em> method
- * supports it in the other direction.</p>
+ * supports iteration from the <em>front</em> to the <em>back</em> and the <em>reverse</em>
+ * method supports it in the other direction.
+ * </p>
  *
- * @param <E> The type of elements in the deque.
+ * @param <E> The type of element in the deque.
  * @author Aniket Kumar
  */
-public final class Deque<E> implements Collection<E> {
-  private Node front;
-  private Node back;
-  private int length = 0;
-
-  /**
-   * Instantiate and return a new {@link Deque} object.
-   */
-  public Deque() {
-    front = null;
-    back = null;
-  }
+public interface Deque<E> extends Collection<E> {
 
   /* **************************************************************************
    * Section: Object Methods
    ************************************************************************** */
 
   /**
-   * Check if this deque is equal to the given object.
-   * Calls {@link Object#equals(Object that) equals()} on the elements to check if they
-   * are equal.
+   * Is the deque equal to the given object {@code obj}?
+   * A deque will be deemed equal to {@code obj} if {@code obj} satisfies the following
+   * conditions:
+   * <ol>
+   *   <li>{@code obj} is a {@link Deque} object or one of its subclasses.</li>
+   *   <li>
+   *     All the elements of {@code obj} are equal to the corresponding elements in this
+   *     deque.
+   *   </li>
+   * </ol>
    *
-   * @param obj The other object to check for equality.
-   * @return {@code true} if {@code obj} is a subclass of {@link Deque} and all the elements
-   *     in the deque are equal; {@code false} otherwise.
-   * @implNote As it currently stands, if two deque objects are empty, the {@code equals()}
-   *     method will always return {@code true}. This happens as no elements are available to
-   *     compare.
+   * <p>
+   *   Because of Java's use of erasure, it is currently not possible to differentiate
+   *   between the type of elements in two empty dequeues. This implies that if two
+   *   empty {@link Deque} objects - which store two different types of elements, are
+   *   compared with {@code equals()}, then the result will always be {@code true}.
+   * </p>
+   *
+   * @param obj The other Object to compare {@code this} with for equality.
+   * @return {@code true} if {@code obj} is equal to this deque,
+   *     {@code false} otherwise.
    */
-  public boolean equals(Object obj) {
-    if (obj == this)                return true;
-    if (obj == null)                return false;
-    if (!(obj instanceof Deque))    return false;
-    Deque<?> that = (Deque<?>) obj;
-    if (this.size() != that.size()) return false;
-
-    // compare each element
-    Iterator<E> itor1 = this.iterator();
-    Iterator<?> itor2 = that.iterator();
-    while (itor1.hasNext()) {
-      if (!itor1.next().equals(itor2.next())) {
-        return false;
-      }
-    }
-    return true;
-  }
+  @Override
+  boolean equals(Object obj);
 
   /**
-   * Return a string representation of the deque. Primarily for debugging.
+   * Get a string representation of the deque.
+   * Primarily for debugging and helping find bugs in client code.
    *
    * @return A string.
    */
-  public String toString() {
-    if (isEmpty()) return "(F[ ]B)";
-
-    StringBuilder sb = new StringBuilder("(F[ ");
-    for (E elmt : this) {
-      sb.append(elmt);
-      sb.append(", ");
-    }
-    sb.setLength(sb.length() - 2);
-    sb.append(" ]B)");
-    return sb.toString();
-  }
+  @Override
+  String toString();
 
   /* **************************************************************************
    * Section: Iterable Methods
    ************************************************************************** */
 
   /**
-   * Get an iterator object that produces the elements of the deque from <em>front</em>
-   * to <em>back</em>.
+   * Get an iterator that produces the elements of the deque from the front
+   * to the back.
    *
    * @return An iterator.
+   *
+   * @see #reverse()
    */
   @Override
-  public Iterator<E> iterator() {
-    return new DoublyLinkedListIterator(front, true);
-  }
-
-  /**
-   * Get an iterable object that produces the elements from <em>back</em> to <em>front</em>.
-   *
-   * @return An iterable.
-   */
-  public Iterable<E> reverse() {
-    return () -> new DoublyLinkedListIterator(back, false);
-  }
+  Iterator<E> iterator();
 
   /* **************************************************************************
    * Section: Collection Methods
@@ -115,12 +86,10 @@ public final class Deque<E> implements Collection<E> {
   /**
    * How many elements are present in the deque?
    *
-   * @return The count of number of elements in the deque.
+   * @return The count of elements present in the deque.
    */
   @Override
-  public int size() {
-    return length;
-  }
+  int size();
 
   /**
    * Is the deque empty?
@@ -128,245 +97,113 @@ public final class Deque<E> implements Collection<E> {
    * @return {@code true} if deque is empty, {@code false} otherwise.
    */
   @Override
-  public boolean isEmpty() {
-    return length == 0;
-  }
+  boolean isEmpty();
 
   /**
    * Does {@code elmt} exist in the deque?
    *
-   * @param elmt The element to check for.
-   * @return {@code true} if {@code elmt} exists in the deque, {@code false}
-   *     otherwise.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
-   */
-  public boolean contains(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to contains() is null");
-
-    for (E dequeElmt : this) {
-      if (dequeElmt.equals(elmt)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Clear the deque of all its elements. Set it to its instantiated state.
+   * @param elmt The element to check existence of.
+   * @return {@code true} if {@code elmt} exists, {@code false} otherwise.
    */
   @Override
-  public void clear() {
-    length = 0;
-    front = null;
-    back = null;
-  }
+  boolean contains(E elmt);
 
   /**
-   * Get a shallow copy of the deque.
+   * Clear the deque of all its elements.
+   * Sets all internal state members to their <em>default</em> initial state.
+   */
+  @Override
+  void clear();
+
+  /**
+   * Return a shallow copy of the deque.
+   * A shallow copy creates a copy of the deque but not the elements in the
+   * deque.
    *
-   * @return A new deque.
+   * @return A shallow copy of the deque.
+   *
+   * @see #deepcopy(Function copyFn)
    */
   @Override
-  public Deque<E> copy() {
-    Deque<E> cp = new Deque<>();
-    for (E elmt : this) {
-      cp.addBack(elmt);
-    }
+  Collection<E> copy();
 
-    return cp;
-  }
+  /**
+   * Returns a deepcopy of the deque.
+   * A deepcopy creates a copy of the deque and populates it with copies of the
+   * original elements.
+   *
+   * @param copyFn A {@link Function} that takes original element as the
+   *               argument and returns a deepcopy of that element.
+   * @return A deepcopy of the deque.
+   *
+   * @throws IllegalArgumentException If {@code copyFn} is {@code null}.
+   * @see #copy()
+   */
+  @Override
+  Collection<E> deepcopy(Function<? super E, E> copyFn);
 
   /* **************************************************************************
    * Section: Deque Methods
    ************************************************************************** */
 
   /**
-   * Add the given element to the <em>front</em> of the deque.
+   * Get an iterable that produces the elements from the back to the front.
+   *
+   * @return An iterable.
+   *
+   * @see #iterator()
+   */
+  Iterable<E> reverse();
+
+  /**
+   * Add {@code elmt} to the front of the deque.
    *
    * @param elmt The element to add.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
-  public void addFront(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to addFront() is null");
-
-    Node node = new Node();
-    node.elmt = elmt;
-
-    if (isEmpty()) {
-      front = node;
-      back = node;
-    } else {
-      front.prev = node;
-      node.next = front;
-      front = node;
-    }
-    length++;
-  }
+  void addFront(E elmt);
 
   /**
-   * Add the given element to the <em>back</em> of the deque.
+   * Add {@code elmt} to the back of the deque.
    *
    * @param elmt The element to add.
-   * @throws IllegalArgumentException If {@code elmt} is {@code null}.
    */
-  public void addBack(E elmt) {
-    if (elmt == null) throw new IllegalArgumentException("argument to addBack() is null");
-
-    Node node = new Node();
-    node.elmt = elmt;
-
-    if (isEmpty()) {
-      back = node;
-      front = node;
-    } else {
-      back.next = node;
-      node.prev = back;
-      back = node;
-    }
-    length++;
-  }
+  void addBack(E elmt);
 
   /**
-   * Delete and return the element at the <em>front</em> of the deque.
+   * Delete and return the element at the front of the deque.
    *
-   * @return The deleted element that was at the <em>front</em>.
+   * @return The deleted element that was at the front.
+   *
    * @throws NoSuchElementException If deque is empty (underflow).
    */
-  public E delFront() {
-    if (isEmpty()) throw new NoSuchElementException("Underflow: can't delete from empty deque");
-
-    E elmt = front.elmt;
-
-    if (size() == 1) {
-      front = null;
-      back = null;
-    } else {
-      front = front.next;
-      front.prev.next = null;
-      front.prev = null;
-    }
-    length--;
-
-    return elmt;
-  }
+  E delFront();
 
   /**
-   * Delete and return the element at the <em>back</em> of the deque.
+   * Delete and return the element at the back of the deque.
    *
-   * @return The deleted element that was at the <em>back</em>.
+   * @return The deleted element that was at the back.
+   *
    * @throws NoSuchElementException If deque is empty (underflow).
    */
-  public E delBack() {
-    if (isEmpty()) throw new NoSuchElementException("Underflow: can't delete from empty deque");
-
-    E elmt = back.elmt;
-
-    if (size() == 1) {
-      back = null;
-      front = null;
-    } else {
-      back = back.prev;
-      back.next.prev = null;
-      back.next = null;
-    }
-    length--;
-
-    return elmt;
-  }
+  E delBack();
 
   /**
-   * Return the element that was at the <em>front</em> of the deque, without
+   * Return the element that was at the front of the deque, without
    * deleting it.
    *
-   * @return The element that is at <em>front</em> of the deque.
+   * @return The element that is at front of the deque.
+   *
    * @throws NoSuchElementException If deque is empty (underflow).
    */
-  public E peekFront() {
-    if (isEmpty()) throw new NoSuchElementException("Underflow: can't peek at empty deque");
-
-    return front.elmt;
-  }
+  E front();
 
   /**
-   * Return the element that was at the <em>back</em> of the deque, without
+   * Return the element that was at the back of the deque, without
    * deleting it.
    *
-   * @return The element that is at <em>back</em> of the deque.
+   * @return The element that is at back of the deque.
+   *
    * @throws NoSuchElementException If deque is empty (underflow).
    */
-  public E peekBack() {
-    if (isEmpty()) throw new NoSuchElementException("Underflow: can't peek at empty deque");
-
-    return back.elmt;
-  }
-
-  /* **************************************************************************
-   * Section: Helper Classes and Methods
-   ************************************************************************** */
-
-  /**
-   * Represents a node in a doubly linked list. Holds the element and a reference to
-   * the prev and next nodes.
-   */
-  private class Node {
-    E elmt;
-    Node prev = null;
-    Node next = null;
-  }
-
-  /**
-   * An iterator class that supports iteration over a doubly linked list from
-   * either direction.
-   */
-  private class DoublyLinkedListIterator implements Iterator<E> {
-    private final boolean frontToBack;
-    private Node current;
-
-    /**
-     * Instantiate and return a new {@link DoublyLinkedListIterator} object.
-     *
-     * @param startNode   The node to start iterating from.
-     * @param frontToBack Pass {@code true} if the iterator should move <em>front</em>
-     *                    from {@code startNode}, {@code false} for <em>backwards</em>.
-     */
-    private DoublyLinkedListIterator(Node startNode, boolean frontToBack) {
-      this.frontToBack = frontToBack;
-      this.current = startNode;
-    }
-
-    /**
-     * Does the iterator have any more elements to produce?
-     *
-     * @return {@code false} if the iterator has been depleted, {@code false} otherwise.
-     */
-    @Override
-    public boolean hasNext() {
-      return current != null;
-    }
-
-    /**
-     * Gets the next element produced by the iterator.
-     *
-     * @return The next element.
-     * @throws NoSuchElementException If the iterator has been depleted.
-     */
-    @Override
-    public E next() {
-      if (!hasNext()) throw new NoSuchElementException("iterator depleted");
-
-      E elmt = current.elmt;
-      current = frontToBack ? current.next : current.prev;
-      return elmt;
-    }
-
-    /**
-     * Throws UOE. {@code remove()} is not supported.
-     *
-     * @throws UnsupportedOperationException Always.
-     */
-    @Override
-    public void remove() {
-      throw new UnsupportedOperationException("remove() is not supported");
-    }
-  }
+  E back();
 }
