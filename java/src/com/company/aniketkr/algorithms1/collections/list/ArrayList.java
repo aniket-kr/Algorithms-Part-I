@@ -5,16 +5,16 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 
-
 // FIXME: under construction
+
 /**
  * Implements the {@link List} interface using an internal resizing array.
  * The internal array starts off with initial capacity {@value INIT_CAPACITY} if
-d * nothing is explicitly specified. This array is guaranteed to be between 25% to
+ * nothing is explicitly specified. This array is guaranteed to be between 25% to
  * 100% full at all times. The size of the array increases (or decreases) by a factor
  * of 2.
- *
- * // TODO: write about method performance here
+ * <p>
+ * // TODO: write about method performance here.
  *
  * @param <E> The type of the elements in the list.
  * @author Aniket Kumar
@@ -445,17 +445,79 @@ public final class ArrayList<E> implements List<E> {
    * Section: Class Defined Methods
    ************************************************************************** */
 
-  // TODO: write docs
+  /**
+   * Return an iterable that iterates over all the elements from index 0 upto the index
+   * {@code stop}.
+   * Calls {@link #range(int start, int stop, int step) range overload} with
+   * {@code start} equal to 0 and {@code step} equal to 1.
+   *
+   * @param stop The index to stop iterating at (exclusive).
+   * @return An iterable.
+   *
+   * @throws IndexOutOfBoundsException If {@code stop} is not in range <code>
+   *                                   [0, {@link #size()}]</code>.
+   * @see #range(int start, int stop, int step)
+   */
   public Iterable<E> range(int stop) {
     return range(0, stop, 1);
   }
 
-  // TODO: write docs
+  /**
+   * Return an iterable that iterates over all elements in the list from {@code start}
+   * (inclusive) to {@code stop} (exclusive).
+   * Calls {@link #range(int start, int stop, int step) range overload} with {@code step}
+   * equal to 1.
+   *
+   * @param start The index to start iterating from (inclusive).
+   * @param stop  The index to stop iterating at (exclusive).
+   * @return An iterable.
+   *
+   * @throws IndexOutOfBoundsException If {@code start} is not in range
+   *                                   <code>[0, {@link #size()})</code> or if {@code stop}
+   *                                   is not in range <code>[0, {@link #size()}]</code>
+   * @see #range(int start, int stop, int step)
+   */
   public Iterable<E> range(int start, int stop) {
     return range(start, stop, 1);
   }
 
-  // TODO: write docs
+  /**
+   * Get an iterable that iterates over elements starting from index {@code start} upto,
+   * but not including, index {@code stop}. The iterable returned will iterate over every
+   * {@code step}th element in the range specified.
+   *
+   * <p>
+   * As long as the constrains of the parameters are followed by the arguments, {@code range()}
+   * <b>NEVER</b> throws any exception. Example uses:
+   * <hr>
+   * {@code   $ ArrayList<Integer> lst = new ArrayList<>()                } <br>
+   * {@code   $ lst.addAll(new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9})   } <br>
+   * {@code   $ lst                                                       } <br>
+   * {@code   > ArrayList[10] [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]            } <br>
+   * {@code   $ lst.range(0, 5, 2)                                        } <br>
+   * {@code   > 0, 2, 4                                                   } <br>
+   * {@code   $ lst.range(1, 8, 3)                                        } <br>
+   * {@code   > 1, 4, 7                                                   } <br>
+   * {@code   $ lst.range(9, -1, -2)                                      } <br>
+   * {@code   $ 9, 7, 5, 3, 1                                             }
+   * <hr>
+   * </p>
+   *
+   * @param start The index to start iterating from (inclusive).
+   * @param stop  The index to stop iterating at or over (exclusive). Can take value -1 or
+   *              {@link #size()} depending on the value of {@code step}.
+   * @param step  Land at every {@code step}th element starting from {@code start}. Note
+   *              that step can have a negative value, in which case it iterates from
+   *              {@code start} to {@code stop} in reverse order.
+   * @return An iterable.
+   *
+   * @throws IllegalArgumentException  If {@code step} is 0. Will be stuck forever iterating
+   *                                   a single element. Not Allowed!
+   * @throws IndexOutOfBoundsException If {@code start} is not in range
+   *                                   <code>[0, {@link #size()})</code> or if {@code stop}
+   *                                   is neither in the same range nor it is any of -1 or
+   *                                   {@link #size()} (depending on value on {@code step}).
+   */
   public Iterable<E> range(int start, int stop, int step) {
     if (step == 0) throw new IllegalArgumentException("invalid step (= 0)");
     if (!isInRange(start)) throw new IndexOutOfBoundsException("invalid start: " + start);
