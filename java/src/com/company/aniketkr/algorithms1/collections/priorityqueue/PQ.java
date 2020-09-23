@@ -17,13 +17,18 @@ import java.util.function.Function;
  * {@link Comparator} interface.
  *
  * <p>
- * This interface guarantees support for the usual <em>insert</em>, <em>poll</em> and
- * <em>peek</em> operations. Apart from these operations, the <em>copy</em> and
- * <em>deepcopy</em> operations return new {@link PQ} objects. The keys in the priority
- * queue can be iterated over in increasing order of the specific priority being used.
+ * Alongside all other {@link Collection} operations, this interface guarantees support for
+ * the usual <em>insert</em>, <em>find-the-minimum</em> and <em>delete-the-minimum</em>
+ * operations. Apart from these operations, the <em>copy</em> and <em>deepcopy</em> operations
+ * return new {@link PQ} objects. The keys in the priority queue can be iterated over in
+ * increasing order of the specific priority being used.
  * </p>
  *
- * @param <K> The type of key in the priority queue.
+ * @param <K> The type of key in the priority queue. This type should either implement
+ *            the {@link Comparable} interface or be accompanied by a {@link Comparator}
+ *            object that can compare keys of this type. If neither of these conditions is
+ *            met, then an {@link IllegalStateException} should be thrown whenever the
+ *            noncompliance is detected.
  * @author Aniket Kumar
  */
 public interface PQ<K> extends Collection<K> {
