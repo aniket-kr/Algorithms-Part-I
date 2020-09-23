@@ -16,25 +16,55 @@ public class HeapPQ<K> implements PQ<K> {
   private K[] arr;                              // array that holds the PQ
   private int length = 0;                       // number of keys in the PQ
 
-  // TODO: document this
+  /**
+   * Initialize and return an empty HeapPQ object.
+   * The default capacity is {@value INIT_CAPACITY}. Also, it will be assumed that
+   * {@link K Key} type implements {@link Comparable} interface.
+   */
   public HeapPQ() {
     this(INIT_CAPACITY, null);
   }
 
-  // TODO: document this
+  /**
+   * Initialize and return an empty HeapPQ object that has capacity to hold
+   * {@code capacity} number of keys.
+   * It will be assumed that {@link K Key} type implements {@link Comparable} interface.
+   *
+   * @param capacity The number of keys the priority queue should be able to hold without
+   *                 having to resize.
+   * @throws IllegalArgumentException If {@code capacity} is less than or equal to 0.
+   */
   public HeapPQ(int capacity) {
     this(capacity, null);
   }
 
-  // TODO: document this
+  /**
+   * Initialize and return an empty HeapPQ object which uses {@code comparator} to compare
+   * keys.
+   * The default capacity of the priority queue, {@value INIT_CAPACITY}, will be used.
+   *
+   * @param comparator The {@link Comparator} object that will compare two {@link K Key}
+   *                   objects. If {@code comparator} is {@code null}, an attempt to use
+   *                   the {@link Comparable} interface will be made.
+   */
   public HeapPQ(Comparator<K> comparator) {
     this(INIT_CAPACITY, comparator);
   }
 
-  // TODO: document this
+  /**
+   * Initialize and return an empty HeapPQ object, that has capacity to hold {@code capacity}
+   * number of keys and uses {@code comparator} to compare the keys.
+   *
+   * @param capacity   The number of keys the priority queue shoudl be able to hold without
+   *                   having to resize.
+   * @param comparator The {@link Comparator} object that will compare two {@link K Key}
+   *                   objects. If {@code comparator} is {@code null}, an attempt to use
+   *                   the {@link Comparable} interface will be made.
+   * @throws IllegalArgumentException If {@code capacity} is less than or equal to 0.
+   */
   @SuppressWarnings("unchecked")
   public HeapPQ(int capacity, Comparator<K> comparator) {
-    if (capacity <= 0) throw new IllegalArgumentException("illegal capacity: " + capacity);
+    if (capacity <= 0) throw new IllegalArgumentException("invalid capacity: " + capacity);
 
     comp = comparator;
     arr = (K[]) new Object[capacity];
@@ -103,7 +133,16 @@ public class HeapPQ<K> implements PQ<K> {
    */
   @Override
   public Iterator<K> iterator() {
-    return null;      // TODO: incomplete method
+    /* NOTE:
+         Using a shallow copy is MUST as it passes the same "reference" to the
+         client when iterating and therefore any attempt to mutate will actually
+         be successful. Sometimes, fields that do not determine the priority
+         may need to be mutated.
+
+         Also, making a shallow copy is significantly cheaper than making deep
+         copies for larger priority queues.
+     */
+    return new HeapIterator(this.copy());
   }
 
   /* **************************************************************************
@@ -180,7 +219,16 @@ public class HeapPQ<K> implements PQ<K> {
    */
   @Override
   public PQ<K> copy() {
-    return null;    // TODO: incomplete method
+    /* NOTE:
+         Don't use the `this.iterator()` method as that will lead to cyclic reference -
+         the `iterator()` method passes a shallow copy (using `copy()`) to the constructor
+         of the HeapIterator class.
+     */
+    HeapPQ<K> cp = new HeapPQ<>((size() >= 2) ? (size() * 2) : INIT_CAPACITY, comp);
+    System.arraycopy(this.arr, 1, cp.arr, 1, this.size());
+    cp.length = this.length;
+
+    return cp;
   }
 
   /**
@@ -198,7 +246,22 @@ public class HeapPQ<K> implements PQ<K> {
    */
   @Override
   public PQ<K> deepcopy(Function<? super K, K> copyFn) {
-    return null;    // TODO: incomplete method
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
+
+    // add `null check` to `copyFn`
+    copyFn = copyFn.andThen(key -> {
+      if (key == null) throw new IllegalArgumentException("copyFn returned null");
+      return key;
+    });
+
+    HeapPQ<K> cp = new HeapPQ<>((size() >= 2) ? (size() * 2) : INIT_CAPACITY, comp);
+
+    for (int i = 1; i <= size(); i++) {
+      cp.arr[i] = copyFn.apply(this.arr[i]);
+    }
+    cp.length = this.length;
+
+    return cp;
   }
 
   /* **************************************************************************
@@ -231,7 +294,8 @@ public class HeapPQ<K> implements PQ<K> {
       resize(arr.length * 2);
     }
 
-    swim(++length);
+    arr[++length] = key;
+    swim(length);
   }
 
   /**
@@ -275,5 +339,150 @@ public class HeapPQ<K> implements PQ<K> {
    * Section: Helper Classes and Methods
    ************************************************************************** */
 
-  // TODO: implement `swap`, `swim`, `sink` and `resize`.
+  /**
+   * Resize the internal array to have a capacity to hold {@code newSize} keys.
+   * Resizing is achieved by copying over all the keys from original array to the newly
+   * created internal array.
+   *
+   * @param newSize The size of the new array to be created.
+   */
+  @SuppressWarnings("unchecked")
+  private void resize(int newSize) {
+    K[] newArr = (K[]) new Object[newSize];
+    System.arraycopy(arr, 1, newArr, 1, size());
+    arr = newArr;
+  }
+
+  /**
+   * Swap the key at index {@code i} with that at index {@code j}. <b>DOES NOT</b> verify
+   * if the array indices are valid.
+   *
+   * @param i Index of key to swapped with key at index {@code j}.
+   * @param j Index of key to swapped with key at index {@code i}.
+   */
+  private void swap(int i, int j) {
+    K tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+
+  /**
+   * Compare the key at index {@code i} with that at index {@code j}. The comparison is done
+   * using whatever means was specified during construction.
+   *
+   * @param i Index of key to compare with key at index {@code j}
+   * @param j Index of key to compare with key at index {@code i}
+   * @return negative (eg. {@code -1}) when {@code arr[i]}  is less than {@code arr[j]}, zero
+   *     ({@code 0}) when equal and positive (eg. {@code +1}) when greater.
+   *
+   * @throws IllegalStateException If {@link K Key} type does not implement {@link Comparable},
+   *                               and neither was any {@link Comparator} provided.
+   * @see HeapPQ HeapPQ docs for more details on IllegalStateExeception.
+   */
+  @SuppressWarnings("unchecked")
+  private int compare(int i, int j) {
+    if (comp == null) {
+      try {
+        return ((Comparable<K>) arr[i]).compareTo(arr[j]);
+      } catch (ClassCastException exc) {
+        throw new IllegalStateException("key doesn't implement Comparable, nor was a Comparator provided", exc);
+      }
+    }
+
+    return comp.compare(arr[i], arr[j]);
+  }
+
+  /**
+   * Move child at index {@code k} upwards until parent at index {@code k / 2} becomes
+   * smaller than the child at {@code k}.
+   * Helps maintain the binary heap tree invariant by "lifting" keys with less priority up
+   * towards the root.
+   *
+   * @param k The index to start lifting up from. Tree below this index will not be seen.
+   * @throws IllegalStateException Upward propagation due to client error -
+   *                               (see {@link #compare(int i, int j) compare} method).
+   */
+  private void swim(int k) {
+    while (k > 1) {
+      if (compare(k / 2, k) < 0) break;    // compare() may throw `IllegalStateException`
+
+      swap(k, k / 2);
+      k /= 2;
+    }
+  }
+
+  /**
+   * Move parent at index {@code k} downwards until child at index {@code 2 * k} becomes
+   * larger than the parent at {@code k}.
+   * Helps maintain the binary heap tree invariant by "sinking" keys with more priority down
+   * towards the leaves.
+   *
+   * @param k The index to start sinking down from. Tree above this index will not be seen.
+   * @throws IllegalStateException Upward propagation due to client error -
+   *                               (see {@link #compare(int i, int j) compare} method).
+   */
+  private void sink(int k) {
+    int j;
+    while (k * 2 <= length) {
+      j = k * 2;
+      if (j + 1 <= length && compare(j, j + 1) > 0) j++;    // `compare()` may throw
+      if (compare(j, k) > 0) break;                         // `IllegalStateException`
+
+      swap(j, k);
+      k = j;
+    }
+  }
+
+  /**
+   * An {@link Iterator} class that iterates over the values of a priority queue in the order
+   * of their specified priority. Is very expensive in terms of space - uses
+   * <code>&theta(n)</code> space where {@code n} is the number of keys in the priority queue.
+   */
+  private class HeapIterator implements Iterator<K> {
+    private final PQ<K> pq;     // shallow copy to operate on
+
+    /**
+     * Initialize and return a HeapIterator object that irreversibly mutates the shallow
+     * copy of priority queue to be iterated.
+     *
+     * @param pqCopy The shallow copy of priority queue that will get mutated.
+     */
+    private HeapIterator(PQ<K> pqCopy) {
+      pq = pqCopy;
+    }
+
+    /**
+     * Does the iterator have any more values to produce?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code true} otherwise.
+     */
+    @Override
+    public boolean hasNext() {
+      return !pq.isEmpty();
+    }
+
+    /**
+     * Produce the next value from the iterator and return it.
+     *
+     * @return The next value.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
+    @Override
+    public K next() {
+      if (!hasNext()) throw new NoSuchElementException("iterator depleted");
+
+      return pq.poll();
+    }
+
+    /**
+     * Remove not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException("remove() not supported");
+    }
+  }
 }
