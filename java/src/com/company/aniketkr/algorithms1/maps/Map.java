@@ -1,17 +1,22 @@
 package com.company.aniketkr.algorithms1.maps;
 
+import java.util.Iterator;
+import java.util.function.Function;
+
+
 /**
  * A type of data structure where certain objects ("keys") are associated with/mapped to
- * certain other objects ("values") is called a Map. A Map is short for mapping. This
+ * certain other objects ("values") is called a Map. A map is short for mapping. This
  * interface guarantees support for the usual <em>get</em>, <em>set</em> and <em>delete</em>
- * operations. The interface aims to use only the {@link #equals(Object obj) equals}\
- * method on the keys. It is for this reason that {@code null} values are not allowed.
+ * operations. The interface aims to use only the {@link #equals(Object obj) equals}
+ * method on the keys. Since {@code null} can be (sort of) equated, the implementing classes
+ * may allow a {@code null} key to be inserted.
  *
- * @param <K> The type of key in the Map
+ * @param <K> The type of key in the map.
  * @param <V> The type of value associated with {@link K Key} objects.
  * @author Aniket Kumar
  */
-public interface Map<K, V> {
+public interface Map<K, V> extends Iterable<K> {
 
   /* **************************************************************************
    * Section: Object Methods
@@ -52,6 +57,19 @@ public interface Map<K, V> {
   @Override
   String toString();
 
+  /* **************************************************************************
+   * Section: Iterable Methods
+   ************************************************************************** */
+
+  /**
+   * Get an iterator that produces all the keys of the map in no particular order.
+   * Note that the order in which the keys are produced may not be the same as order
+   * of insertion.
+   *
+   * @return An iterator that produces keys.
+   */
+  @Override
+  Iterator<K> iterator();
 
   /* **************************************************************************
    * Section: Map Methods
@@ -78,10 +96,36 @@ public interface Map<K, V> {
    * @param key The key to check existence of.
    * @return {@code true} if a there is a value associated with {@code key} in the map,
    *     {@code false} otherwise.
-   *
-   * @throws IllegalArgumentException If {@code key} is {@code null}.
    */
   boolean contains(K key);
+
+  /**
+   * Return a shallow copy of the map.
+   * A shallow copy creates a copy of the map but not of the keys and values in
+   * the map.
+   *
+   * @return A shallow copy of the map.
+   *
+   * @see #deepcopy(Function keyCopyFn, Function valCopyFn)
+   */
+  Map<K, V> copy();
+
+  /**
+   * Returns a deepcopy of the map.
+   * A deepcopy creates a copy of the map and populates it with copies of the
+   * original elements.
+   *
+   * @param keyCopyFn A {@link Function} that takes original key as the argument and
+   *                  returns a deepcopy of that key.
+   * @param valCopyFn A {@link Function} that takes the original value as the argument
+   *                  and returns a deepcopy of that value.
+   * @return A deepcopy of the map.
+   *
+   * @throws IllegalArgumentException If {@code keyCopyFn} or {code valCopyFn} is
+   *                                  {@code null}.
+   * @see #copy()
+   */
+  Map<K, V> deepcopy(Function<? super K, K> keyCopyFn, Function<? super V, V> valCopyFn);
 
   /**
    * Get the value associated with {@code key} from the map.
@@ -95,44 +139,32 @@ public interface Map<K, V> {
   V get(K key);
 
   /**
-   * Get the value associated with {@code key} from the map. If {@code key} doesn't
-   * exist in the map, then {@code fallback} value is returned.
+   * Get the value associated with {@code key} from the map.
+   * If {@code key} doesn't exist in the map, then {@code fallback} value is returned.
    *
    * @param key      The key to return associated value of.
    * @param fallback The fallback value to return if {@code key} does not exist in
    *                 the map.
    * @return The value associated with {@code key} from the map, or {@code fallback}
    *     if {@code key} doesn't exist in the map.
-   *
-   * @throws IllegalArgumentException If {@code key} is {@code null}.
    */
   V get(K key, V fallback);
 
   /**
-   * Put {@code key} in the map and associate the value {@code val} with it. If {@code key}
-   * already exists in the map, then updated the associated value to be {@code val}; the old
-   * value is discarded.
+   * Put {@code key} in the map and associate the value {@code val} with it.
+   * If {@code key} already exists in the map, then updated the associated value to be
+   * {@code val}; the old value is discarded.
    *
    * @param key The key to add/update in the map to have {@code val} as associated value.
    * @param val The value to associate with {@code key}.
-   * @throws IllegalArgumentException If {@code key} is {@code null}.
    */
   void set(K key, V val);
 
   /**
-   * Delete the given {@code key} and its associated value from the map. If {@code key}
-   * does not exist in the map, then simply returns - no exception is thrown.
+   * Delete the given {@code key} and its associated value from the map.
+   * If {@code key} does not exist in the map, then simply returns - no exception is thrown.
    *
    * @param key The key in the key-value pair to delete.
-   * @throws IllegalArgumentException If {@code key} is {@code null}.
    */
   void del(K key);
-
-  /**
-   * Get an iterable that iterates over all the keys of the map in no particular order.
-   * Note that the order of iteration may not be the same as order of insertion.
-   *
-   * @return An iterable.
-   */
-  Iterable<K> keys();
 }
