@@ -5,9 +5,27 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 
-// TODO: code complete; docs under construction
 
-// TODO: add javadoc
+/**
+ * Implements the {@link Deque} interface using an internal resizing array that
+ * wraps the deque wraps around. If no explicit capacity is provided, the default
+ * capacity of the internal array is {@value INIT_CAPACITY}. The size of the array
+ * increases (or decreases) by a factor of 2.
+ *
+ * <p>
+ * The deque supports <em>add</em> and <em>delete</em> operations from both ends in
+ * <code>&theta;(nlog<sub>2</sub>n)</code> amortized time (not worst case time). The
+ * <em>peek</em> operations on both ends take constant time. The <em>equals</em> and
+ * <em>contains</em> operations take <code>&theta;(n)</code> time. The operations to
+ * <em>copy</em> and <em>deepcopy</em> also take <code>&theta;(n)</code> time, although
+ * <em>copy</em> is faster than <em>deepcopy</em>. Iteration (via
+ * <em>iterator</em> and <em>reverse</em> methods) take constant extra space. All other
+ * methods take constant time.
+ * </p>
+ *
+ * @param <E> The type of element in the deque.
+ * @author Aniket Kumar
+ */
 public final class ArrayDeque<E> implements Deque<E> {
   private static final int INIT_CAPACITY = 8;    // default capacity of deque
 
@@ -51,10 +69,9 @@ public final class ArrayDeque<E> implements Deque<E> {
    */
   @Override
   public boolean equals(Object obj) {
-    // TODO: reformat this
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (!(obj instanceof Deque)) return false;
+    if (this == obj)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof Deque))    return false;
     Deque<?> that = (Deque<?>) obj;
     if (this.size() != that.size()) return false;
 
@@ -328,7 +345,16 @@ public final class ArrayDeque<E> implements Deque<E> {
    * Section: Helper Classes and Methods
    ************************************************************************** */
 
-  // TODO: write the docs
+  /**
+   * Takes an index value {@code val} as an argument and moves the index right by
+   * {@code by} places. The move happens such that the indices wrap around the
+   * internal array and "run off" the bounds.
+   *
+   * @param val The initial index to move right from.
+   * @param by  The number of places to move right. <b>If {@code by} is negative,
+   *            {@code val} moves left instead.</b>
+   * @return The index that you end up at after the wrapped move.
+   */
   private int move(int val, int by) {
     // assume that internal array has enough space
     int res = val + by;
@@ -340,7 +366,14 @@ public final class ArrayDeque<E> implements Deque<E> {
     }
   }
 
-  // TODO: write the docs
+  /**
+   * Resize the internal array to be of capacity {@code newSize}.
+   * Resizing is achieved by copying over all the elements to a new array
+   * and replacing the internal array.
+   *
+   * @param newSize The new desired capacity of the internal array. Must be greater
+   *                than the size of the deque.
+   */
   @SuppressWarnings("unchecked")
   private void resize(int newSize) {
     E[] newArr = (E[]) new Object[newSize];
@@ -352,7 +385,17 @@ public final class ArrayDeque<E> implements Deque<E> {
     arr = newArr;
   }
 
-  // TODO: write the docs
+  /**
+   * Copy over the elements from the internal array to {@code toArr}.
+   * This copy over is a shallow copy as only references are copied. This method
+   * handles wrapped state of the deque internally, but does not adjust the {@link #front}
+   * and the {@link #back} indices. The copied over dequeue always starts at {@code 0}
+   * forwards. Also, {@code toArr} is not checked for being of appropriately length.
+   *
+   * @param toArr The array to copy over elements into.
+   * @throws ArrayIndexOutOfBoundsException If {@code toArr} has length less than deque
+   *                                        size.
+   */
   private void copyOver(E[] toArr) {
     if (front >= back) {
       System.arraycopy(arr, back, toArr, 0, size());
@@ -367,11 +410,20 @@ public final class ArrayDeque<E> implements Deque<E> {
    * from both sides.
    */
   private class WrapArrayIterator implements Iterator<E> {
-    private final int last;
-    private final int step;
-    private int current;
+    private final int last;        // last element to iterate here
+    private final int step;        // step decides direction to iterate in
+    private int current;           // the start, then current index of iteration
 
-    // TODO: write docs
+    /**
+     * Initialize and return a new WrapArrayIterator iterates between indices {@code frontIncl}
+     * and {@code backIncl}.
+     * The direction of iteration is decided by {@code frontToBack}.
+     *
+     * @param frontIncl   The index at which first key of the deque is located.
+     * @param backIncl    The index at which the last key of the deque is located.
+     * @param frontToBack Pass {@code true} if iteration should take place from front
+     *                    to the back of the deque, {@code false} for the other direction.
+     */
     private WrapArrayIterator(int frontIncl, int backIncl, boolean frontToBack) {
       if (frontToBack) {
         current = frontIncl;
@@ -384,13 +436,23 @@ public final class ArrayDeque<E> implements Deque<E> {
       }
     }
 
-    // TODO: write docs
+    /**
+     * Can the iterator produce another value?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code true} otherwise.
+     */
     @Override
     public boolean hasNext() {
-      return current != move(last, step);
+      return current != ArrayDeque.this.move(last, step);
     }
 
-    // TODO: write docs
+    /**
+     * Produce the next value from the iterator and return it.
+     *
+     * @return The next value.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
     @Override
     public E next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
