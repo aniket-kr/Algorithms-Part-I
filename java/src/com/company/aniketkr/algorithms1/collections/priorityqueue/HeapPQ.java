@@ -5,10 +5,29 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 
-// TODO: code under MAJOR construction
 
-
-// TODO: add a javadoc here
+/**
+ * Implements the {@link PQ} interface using resizing array based binary heaps.
+ * If the capacity is not defined explicitly, the initial array starts off with the
+ * default capacity of {@value INIT_CAPACITY}. The size of the array increases (or
+ * decreases) by a factor of 2.
+ *
+ * <p>
+ * The <em>insert</em> and <em>poll</em> operations take <code>&theta;(nlog<sub>2</sub>n)
+ * </code> amortized time (not worst case time). The <em>peek</em> operation takes constant
+ * time. The <em>contains</em>, <em>equals</em>, <em>copy</em> and <em>deepcopy</em>
+ * operations all take <code>&theta;(n)</code> time. Note that <em>copy</em> is faster than
+ * <em>deepcopy</em> operation. All other operations take constant time.
+ * </p>
+ *
+ * <p>
+ * The <em>iterator</em> method takes <code>O(n)</code> extra space. The iterator produces
+ * keys in the order of the specific priority being used.
+ * </p>
+ *
+ * @param <K> The type of key in the priority queue.
+ * @author Aniket Kumar
+ */
 public class HeapPQ<K> implements PQ<K> {
   private static final int INIT_CAPACITY = 8;   // default capacity of PQ
 
@@ -55,7 +74,7 @@ public class HeapPQ<K> implements PQ<K> {
    * Initialize and return an empty HeapPQ object, that has capacity to hold {@code capacity}
    * number of keys and uses {@code comparator} to compare the keys.
    *
-   * @param capacity   The number of keys the priority queue shoudl be able to hold without
+   * @param capacity   The number of keys the priority queue should be able to hold without
    *                   having to resize.
    * @param comparator The {@link Comparator} object that will compare two {@link K Key}
    *                   objects. If {@code comparator} is {@code null}, an attempt to use
@@ -83,10 +102,9 @@ public class HeapPQ<K> implements PQ<K> {
    */
   @Override
   public boolean equals(Object obj) {
-    // TODO: reformat code in this method
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (!(obj instanceof PQ)) return false;
+    if (this == obj)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof PQ))       return false;
     PQ<?> that = (PQ<?>) obj;
     if (this.size() != that.size()) return false;
 
@@ -285,10 +303,13 @@ public class HeapPQ<K> implements PQ<K> {
    *
    * @param key The key to be inserted.
    * @throws IllegalArgumentException If {@code key} is {@code null}.
+   * @throws IllegalStateException    If and only if the {@link K Key} implements neither
+   *                                  {@link Comparable} interface nor was any {@link Comparator}
+   *                                  object provided during construction.
+   * @see HeapPQ HeapPQ for more info on IllegalStateException.
    */
   @Override
   public void insert(K key) {
-    // TODO: add throws "IllegalStateException" to docs (through less -> swim)
     if (key == null) throw new IllegalArgumentException("argument to insert() is null");
     if (size() == arr.length) {
       resize(arr.length * 2);
@@ -304,12 +325,14 @@ public class HeapPQ<K> implements PQ<K> {
    *
    * @return The removed key with least priority.
    *
-   * @throws NoSuchElementException If the priority queue is empty;
-   *                                <em>underflow</em>.
+   * @throws NoSuchElementException If the priority queue is empty; <em>underflow</em>.
+   * @throws IllegalStateException  If and only if the {@link K Key} implements neither
+   *                                {@link Comparable} interface nor was any {@link Comparator}
+   *                                object provided during construction.
+   * @see HeapPQ HeapPQ for more info on IllegalStateException.
    */
   @Override
   public K poll() {
-    // TODO: add throws "IllegalStateException" to docs (through less -> sink)
     if (isEmpty()) throw new NoSuchElementException("underflow: can't poll() from empty PQ");
     if (size() == arr.length / 4) {
       resize(arr.length / 2);
@@ -425,8 +448,8 @@ public class HeapPQ<K> implements PQ<K> {
     int j;
     while (k * 2 <= length) {
       j = k * 2;
-      if (j + 1 <= length && compare(j, j + 1) > 0) j++;    // `compare()` may throw
-      if (compare(j, k) > 0) break;                         // `IllegalStateException`
+      if (j + 1 <= length && compare(j, j + 1) > 0) j++;
+      if (compare(j, k) > 0) break;        // `compare()` may throw `IllegalStateException`
 
       swap(j, k);
       k = j;
