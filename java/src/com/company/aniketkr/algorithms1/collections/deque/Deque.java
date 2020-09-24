@@ -126,7 +126,7 @@ public interface Deque<E> extends Collection<E> {
    * @see #deepcopy(Function copyFn)
    */
   @Override
-  Collection<E> copy();
+  Deque<E> copy();
 
   /**
    * Returns a deepcopy of the deque.
@@ -141,7 +141,7 @@ public interface Deque<E> extends Collection<E> {
    * @see #copy()
    */
   @Override
-  Collection<E> deepcopy(Function<? super E, E> copyFn);
+  Deque<E> deepcopy(Function<? super E, E> copyFn);
 
   /* **************************************************************************
    * Section: Deque Methods
