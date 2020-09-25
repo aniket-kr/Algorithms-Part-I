@@ -1,5 +1,6 @@
 package com.company.aniketkr.algorithms1.maps;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Function;
 
@@ -106,7 +107,7 @@ public interface Map<K, V> extends Iterable<K> {
    *
    * @return A shallow copy of the map.
    *
-   * @see #deepcopy(Function keyCopyFn, Function valCopyFn)
+   * @see #deepcopy(Function copyFn)
    */
   Map<K, V> copy();
 
@@ -115,17 +116,16 @@ public interface Map<K, V> extends Iterable<K> {
    * A deepcopy creates a copy of the map and populates it with copies of the
    * original elements.
    *
-   * @param keyCopyFn A {@link Function} that takes original key as the argument and
-   *                  returns a deepcopy of that key.
-   * @param valCopyFn A {@link Function} that takes the original value as the argument
-   *                  and returns a deepcopy of that value.
+   * @param copyFn A {@link Function} that takes original key-value pair as a {@link KeyVal}
+   *               object as the argument and returns a deepcopy of the key and the val as a
+   *               new {@code KeyVal} object.
    * @return A deepcopy of the map.
    *
-   * @throws IllegalArgumentException If {@code keyCopyFn} or {code valCopyFn} is
-   *                                  {@code null}.
+   * @throws IllegalArgumentException If {@code copyFn} or any key in the returned {@code KeyVal}
+   *                                  object is {@code null}.
    * @see #copy()
    */
-  Map<K, V> deepcopy(Function<? super K, K> keyCopyFn, Function<? super V, V> valCopyFn);
+  Map<K, V> deepcopy(Function<KeyVal<? super K, ? super V>, KeyVal<? extends K, ? extends V>> copyFn);
 
   /**
    * Get the value associated with {@code key} from the map.
@@ -158,7 +158,7 @@ public interface Map<K, V> extends Iterable<K> {
    * @param key The key to add/update in the map to have {@code val} as associated value.
    * @param val The value to associate with {@code key}.
    */
-  void set(K key, V val);
+  void put(K key, V val);
 
   /**
    * Delete the given {@code key} and its associated value from the map.
@@ -167,4 +167,43 @@ public interface Map<K, V> extends Iterable<K> {
    * @param key The key in the key-value pair to delete.
    */
   void del(K key);
+
+  /**
+   * Get the {@code Comparator} object being user for comparing keys.
+   *
+   * @return The comparator being used to compare keys. If the natural order defined by
+   *     the {@link Comparable} interface is being used then returns {@code null}.
+   */
+  Comparator<K> comparator();
+
+  /**
+   * Get an iterable object that iterates over the key-value pairs packed together in an
+   * immutable {@link KeyVal} object.
+   *
+   * @return An iterable.
+   */
+  Iterable<KeyVal<K, V>> items();
+
+  /* **************************************************************************
+   * Section: Interface Static Classes
+   ************************************************************************** */
+
+  // TODO: write docs
+  final class KeyVal<K, V> {
+    private final K key;
+    private final V val;
+
+    public KeyVal(K key, V val) {
+      this.key = key;
+      this.val = val;
+    }
+
+    public K key() {
+      return key;
+    }
+
+    public V val() {
+      return val;
+    }
+  }
 }

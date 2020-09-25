@@ -121,7 +121,7 @@ public interface OrderMap<K, V> extends Map<K, V> {
    *
    * @return A shallow copy of the map.
    *
-   * @see #deepcopy(Function keyCopyFn, Function valCopyFn)
+   * @see #deepcopy(Function copyFn)
    */
   @Override
   Map<K, V> copy();
@@ -131,19 +131,17 @@ public interface OrderMap<K, V> extends Map<K, V> {
    * A deepcopy creates a copy of the map and populates it with copies of the
    * original elements.
    *
-   * @param keyCopyFn A {@link Function} that takes original key as the argument and
-   *                  returns a deepcopy of that key.
-   * @param valCopyFn A {@link Function} that takes the original value as the argument
-   *                  and returns a deepcopy of that value.
+   * @param copyFn A {@link Function} that takes original key-value pair as a {@link KeyVal}
+   *               object as the argument and returns a deepcopy of the key and the val as a
+   *               new {@code KeyVal} object.
    * @return A deepcopy of the map.
    *
-   * @throws IllegalArgumentException If {@code keyCopyFn} or {code valCopyFn} is
-   *                                  {@code null}. Also if any value returned by
-   *                                  {@code keyCopyFn} is {@code null}.
+   * @throws IllegalArgumentException If {@code copyFn} or any key in the returned {@code KeyVal}
+   *                                  object is {@code null}.
    * @see #copy()
    */
-  @Override
-  Map<K, V> deepcopy(Function<? super K, K> keyCopyFn, Function<? super V, V> valCopyFn);
+  Map<K, V> deepcopy(Function<KeyVal<? super K, ? super V>, KeyVal<? extends K, ? extends V>> copyFn);
+
 
   /**
    * Get the value associated with {@code key} from the map.
@@ -182,7 +180,7 @@ public interface OrderMap<K, V> extends Map<K, V> {
    * @throws IllegalArgumentException If {@code key} is {@code null}.
    */
   @Override
-  void set(K key, V val);
+  void put(K key, V val);
 
   /**
    * Delete the given {@code key} and its associated value from the map.
@@ -193,6 +191,23 @@ public interface OrderMap<K, V> extends Map<K, V> {
    */
   @Override
   void del(K key);
+
+  /**
+   * Get the {@code Comparator} object being user for comparing keys.
+   *
+   * @return The comparator being used to compare keys. If the natural order defined by
+   * the {@link Comparable} interface is being used then returns {@code null}.
+   */
+  Comparator<K> comparator();
+
+  /**
+   * Get an iterable object that iterates over the key-value pairs packed together in an
+   * immutable {@link Map.KeyVal} object.
+   *
+   * @return An iterable.
+   */
+  @Override
+  Iterable<Map.KeyVal<K, V>> items();
 
   /* **************************************************************************
    * Section: OrderMap Methods
@@ -300,4 +315,16 @@ public interface OrderMap<K, V> extends Map<K, V> {
    * @throws IllegalArgumentException When either {@code low} or {@code high} is {@code null}.
    */
   Iterable<K> keys(K low, K high);
+
+  /**
+   * Get an iterable object that iterates over key-value pairs that have priorities between
+   * {@code low} and {@code high}, in increasing order of priorities.
+   * The pairs are produced as an immutable {@link Map.KeyVal} object.
+   *
+   * @param low  Iteration will start with the ceiling of this key.
+   * @param high Iteration will end with the floor of this key.
+   * @return An iterable.
+   * @throws IllegalArgumentException If either {@code low} or {@code high} are {@code null}.
+   */
+  Iterable<Map.KeyVal<K, V>> items(K low, K high);
 }
