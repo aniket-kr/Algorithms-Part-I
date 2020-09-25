@@ -3,6 +3,7 @@ package com.company.aniketkr.algorithms1.maps.symbol;
 import com.company.aniketkr.algorithms1.maps.Map;
 import com.company.aniketkr.algorithms1.maps.OrderMap;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -19,6 +20,31 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
   private V[] vals;                               // holds the values
   private int length = 0;                         // number of key-value pairs
 
+  // TODO: write docs
+  public ArrayOrderMap() {
+    this(INIT_CAPACITY, null);
+  }
+
+  // TODO: write docs
+  public ArrayOrderMap(int capacity) {
+    this(capacity, null);
+  }
+
+  // TODO: write docs
+  public ArrayOrderMap(Comparator<K> comparator) {
+    this(INIT_CAPACITY, comparator);
+  }
+
+  // TODO: write docs
+  @SuppressWarnings("unchecked")
+  public ArrayOrderMap(int capacity, Comparator<K> comparator) {
+    if (capacity <= 0) throw new IllegalArgumentException("invalid capacity: " + capacity);
+
+    comp = comparator;
+    keys = (K[]) new Object[capacity];
+    vals = (V[]) new Object[capacity];
+  }
+
   /* **************************************************************************
    * Section: Object Methods
    ************************************************************************** */
@@ -32,7 +58,31 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public boolean equals(Object obj) {
-    return false;
+    // TODO: reformat code
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!(obj instanceof Map)) return false;
+    Map<?, ?> map = (Map<?, ?>) obj;
+    if (this.size() != map.size()) return false;
+
+    // compare all elements
+    if (map instanceof OrderMap) {
+      // when key-value pairs are ordered
+      OrderMap<?, ?> orderMap = (OrderMap<?, ?>) map;
+
+      Iterator<? extends KeyVal<?, ?>> itor = orderMap.items().iterator();
+      for (KeyVal<K, V> kv : this.items()) {
+        if (!kv.equals(itor.next())) {
+          return false;
+        }
+      }
+
+    } else {
+
+      // FIXME: This is the place where you'll compare the `Map` (map) with
+      //  `OrderMap` (this). Still can't think of a way. :(
+    }
+    return true;
   }
 
   /**
@@ -42,18 +92,21 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    * @return A string.
    */
   @Override
-  @SuppressWarnings("DuplicatedCode")
   public String toString() {
+    return "ArrayOrderMap{keys=" + Arrays.toString(keys) + ", vals=" + Arrays.toString(vals) + ", length=" + length + '}';
+
+    /*
     String className = this.getClass().getSimpleName();
 
     if (isEmpty()) return className + "[0] { }";
 
     StringBuilder sb = new StringBuilder(className).append("[").append(size()).append("] { ");
-    for (Map.KeyVal<K, V> kv : this.items()) {
+    for (KeyVal<K, V> kv : this.items()) {
       sb.append(kv.key()).append(": ").append(kv.val()).append(", ");
     }
     sb.setLength(sb.length() - 2);
     return sb.append(" }").toString();
+    */
   }
 
   /* **************************************************************************
@@ -109,7 +162,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
   public boolean contains(K key) {
     if (key == null) throw new IllegalArgumentException("argument to contains() is null");
 
-    return search(key, false) != -1;
+    return search(key) >= 0;
   }
 
   /**
@@ -123,6 +176,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public Map<K, V> copy() {
+    // TODO: impl incomplete
     return null;
   }
 
@@ -141,6 +195,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    * @see #copy()
    */
   public Map<K, V> deepcopy(Function<KeyVal<? super K, ? super V>, KeyVal<? extends K, ? extends V>> copyFn) {
+    // TODO: impl incomplete
     return null;
   }
 
@@ -158,8 +213,8 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
   public V get(K key) {
     if (key == null) throw new IllegalArgumentException("argument to get() is null");
 
-    int i = search(key, false);
-    if (i != -1)  return vals[i];
+    int i = search(key);
+    if (i >= 0) return vals[i];
 
     throw new NoSuchElementException("map has no key \"" + key + "\"");
   }
@@ -180,8 +235,8 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
   public V get(K key, V fallback) {
     if (key == null) throw new IllegalArgumentException("argument to get() is null");
 
-    int i = search(key, false);
-    return (i != -1) ? vals[i] : fallback;
+    int i = search(key);
+    return (i >= 0) ? vals[i] : fallback;
   }
 
   /**
@@ -196,11 +251,20 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
   @Override
   public void put(K key, V val) {
     if (key == null) throw new IllegalArgumentException("1st argument to set() is null");
+
+    int i = rank(key);
+
+    // if `key` already exists
+    if (isInRange(i) && compare(keys[i], key) == 0) {
+      vals[i] = val;
+      return;
+    }
+
+    // if `key` doesn't exist
     if (size() == keys.length) {
       resize(keys.length * 2);
     }
 
-    int i = search(key, true);
     shift(i, 1);
     keys[i] = key;
     vals[i] = val;
@@ -217,13 +281,17 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
   @Override
   public void del(K key) {
     if (key == null) throw new IllegalArgumentException("argument to del() is null");
+    if (size() == keys.length / 4) {
+      resize(keys.length / 2);
+    }
 
-    int i = search(key, false);
-    if (i == -1) return;
-
-    shift(i + 1, -1);
-    keys[--length] = null;
-    vals[length] = null;
+    int i = search(key);
+    if (i >= 0) {
+      shift(i + 1, -1);
+      length--;
+      keys[length] = null;
+      vals[length] = null;
+    }
   }
 
   /**
@@ -238,12 +306,13 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
 
   /**
    * Get an iterable object that iterates over the key-value pairs packed together in an
-   * immutable {@link Map.KeyVal} object.
+   * immutable {@link KeyVal} object.
    *
    * @return An iterable.
    */
   @Override
-  public Iterable<Map.KeyVal<K, V>> items() {
+  public Iterable<KeyVal<K, V>> items() {
+    // TODO: impl incomplete
     return null;
   }
 
@@ -295,7 +364,16 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public K floor(K k) {
-    return null;
+    if (k == null) throw new IllegalArgumentException("argument to floor() is null");
+
+    int i = rank(k);
+    if (isInRange(i) && compare(k, keys[i]) == 0) {
+      return k;
+    } else if (isInRange(i - 1)) {
+      return keys[i - 1];
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -312,7 +390,14 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public K ceil(K k) {
-    return null;
+    if (k == null) throw new IllegalArgumentException("argument to ceil() is null");
+
+    int i = rank(k);
+    if (isInRange(i)) {
+      return keys[i];
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -330,7 +415,28 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public int rank(K key) {
-    return 0;
+    if (key == null) throw new IllegalArgumentException("argument to rank() is null");
+
+    if (isEmpty()) return 0;
+
+    int start = 0;
+    int end = length - 1;
+
+    int mid = end / 2;
+    int cmp;
+    while (start <= end) {
+      mid = (int) (start / 2.0 + end / 2.0);
+      cmp = compare(key, keys[mid]);
+      if (cmp == 0) {
+        return mid;
+      } else if (cmp > 0) {
+        start = mid + 1;
+      } else {
+        end = mid - 1;
+      }
+    }
+
+    return (compare(key, keys[mid]) > 0) ? mid + 1 : mid;
   }
 
   /**
@@ -346,7 +452,10 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public K select(int rank) {
-    return null;
+    if (isEmpty()) throw new IllegalArgumentException("can't select from empty map");
+    if (!(isInRange(rank) || rank == size())) throw new IllegalArgumentException("no key with rank " + rank);
+
+    return keys[rank];
   }
 
   /**
@@ -356,7 +465,12 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public void delMin() {
+    if (isEmpty()) throw new NoSuchElementException("can't delete from empty map");
 
+    shift(1, -1);
+    length--;
+    keys[length] = null;
+    vals[length] = null;
   }
 
   /**
@@ -366,7 +480,11 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public void delMax() {
+    if (isEmpty()) throw new NoSuchElementException("can't delete from empty map");
 
+    length--;
+    keys[length] = null;
+    vals[length] = null;
   }
 
   /**
@@ -382,13 +500,14 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public Iterable<K> keys(K low, K high) {
+    // TODO: impl incomplete
     return null;
   }
 
   /**
    * Get an iterable object that iterates over key-value pairs that have priorities between
    * {@code low} and {@code high}, in increasing order of priorities.
-   * The pairs are produced as an immutable {@link Map.KeyVal} object.
+   * The pairs are produced as an immutable {@link KeyVal} object.
    *
    * @param low  Iteration will start with the ceiling of this key.
    * @param high Iteration will end with the floor of this key.
@@ -397,7 +516,8 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    * @throws IllegalArgumentException If either {@code low} or {@code high} are {@code null}.
    */
   @Override
-  public Iterable<Map.KeyVal<K, V>> items(K low, K high) {
+  public Iterable<KeyVal<K, V>> items(K low, K high) {
+    // TODO: impl incomplete
     return null;
   }
 
@@ -406,22 +526,13 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    ************************************************************************** */
 
   // TODO: write docs
-  private int search(K key, boolean findPos) {
-    int start = 0;
-    int end = length - 1;
+  private boolean isInRange(int i) {
+    return i >= 0 && i < length;
+  }
 
-    int mid = (int) ((start / 2.0) + (end / 2.0));  // if bypassing while loop
-    while (start <= end) {
-      // TODO: reformat cases
-      mid = (int) ((start / 2.0) + (end / 2.0));
-      switch (compare(keys[mid], key)) {
-        case 0  -> { return mid; }
-        case 1  -> end = mid - 1;
-        default -> start = mid + 1;
-      }
-    }
-
-    return findPos ? mid : -1;
+  // TODO: write docs
+  private int search(K key) {
+    return Arrays.binarySearch(keys, 0, length, key, comp);
   }
 
   // TODO: write docs
@@ -439,21 +550,20 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
   }
 
   // TODO: write docs
-  private void swap(int i, int j) {
-    // swap keys
-    K tmpKey = keys[i];
-    keys[i] = keys[j];
-    keys[j] = tmpKey;
-
-    // swap values
-    V tmpVal = vals[i];
-    vals[i] = vals[j];
-    vals[j] = tmpVal;
-  }
-
-  // TODO: write docs
   private void shift(int fromIndex, int by) {
     System.arraycopy(keys, fromIndex, keys, fromIndex + by, length - fromIndex);
     System.arraycopy(vals, fromIndex, vals, fromIndex + by, length - fromIndex);
+  }
+
+  // TODO: write docs
+  @SuppressWarnings("unchecked")
+  private void resize(int newSize) {
+    K[] newKeys = (K[]) new Object[newSize];
+    System.arraycopy(keys, 0, newKeys, 0, size());
+    keys = newKeys;
+
+    V[] newVals = (V[]) new Object[newSize];
+    System.arraycopy(vals, 0, newVals, 0, size());
+    vals = newVals;
   }
 }
