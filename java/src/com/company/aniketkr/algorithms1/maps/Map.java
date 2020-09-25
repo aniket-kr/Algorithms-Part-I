@@ -2,6 +2,7 @@ package com.company.aniketkr.algorithms1.maps;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.Function;
 
 
@@ -196,6 +197,15 @@ public interface Map<K, V> extends Iterable<K> {
     public KeyVal(K key, V val) {
       this.key = key;
       this.val = val;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)              return true;
+      if (!(obj instanceof KeyVal)) return false;
+      KeyVal<?, ?> that = (KeyVal<?, ?>) obj;
+
+      return Objects.equals(this.key, that.key) && Objects.equals(this.val, that.val);
     }
 
     public K key() {
