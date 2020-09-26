@@ -7,3 +7,7 @@ venv
 
 # javadoc files
 java/docs
+
+# tests (for now) and build output
+java/test
+java/out
