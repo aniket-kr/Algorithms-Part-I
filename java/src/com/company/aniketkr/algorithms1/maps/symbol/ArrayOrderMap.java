@@ -21,22 +21,55 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
   private V[] vals;                               // holds the values
   private int length = 0;                         // number of key-value pairs
 
-  // TODO: write docs
+  /**
+   * Initialize and return an empty ArrayOrderMap object and assumes that
+   * the type {@link K Key} implements the {@link Comparable} interface.
+   * The default capacity of the internal array is {@value INIT_CAPACITY}.
+   */
   public ArrayOrderMap() {
     this(INIT_CAPACITY, null);
   }
 
-  // TODO: write docs
+  /**
+   * Initialize and return an empty ArrayOrderMap object that has capacity
+   * to hold {@code capacity} key-value pairs before needing to resize.
+   * It is assumed that the {@link K Key} type implements the {@link Comparable}
+   * interface.
+   *
+   * @param capacity The desired number of key-value pairs the map should be able
+   *                 to hold without having to resize.
+   * @throws IllegalArgumentException If {@code capacity} is less than or equal to
+   *                                  {@code 0}.
+   */
   public ArrayOrderMap(int capacity) {
     this(capacity, null);
   }
 
-  // TODO: write docs
+  /**
+   * Initialize and return an empty ArrayOrderMap object.
+   * The comparison of keys is done with the help of {@code comparator}, even if the type
+   * does implement {@link Comparable} interface. If {@code comparator} is {@code null},
+   * then an attempt to use the {@code Comparable} interface is made. The default
+   * capacity of the map, {@value INIT_CAPACITY}, is used.
+   *
+   * @param comparator The {@link Comparator} object to use for comparison of keys.
+   */
   public ArrayOrderMap(Comparator<K> comparator) {
     this(INIT_CAPACITY, comparator);
   }
 
-  // TODO: write docs
+  /**
+   * Initialize and return an empty ArrayOrderMap object, that has a capacity to hold
+   * {@code capacity} key-value pairs, before needing to resize.
+   * The keys are compared using {@code comparator}. If {@code comparator} is {@code null},
+   * then an attempt is made to use the {@link Comparable} interface.
+   *
+   * @param capacity   The desired number of key-value pairs the map should be able
+   *                   to hold without having to resize.
+   * @param comparator The {@link Comparator} object to use for comparison of keys.
+   * @throws IllegalArgumentException If {@code capacity} is less than or equal to
+   *                                  {@code 0}.
+   */
   @SuppressWarnings("unchecked")
   public ArrayOrderMap(int capacity, Comparator<K> comparator) {
     if (capacity <= 0) throw new IllegalArgumentException("invalid capacity: " + capacity);
@@ -106,7 +139,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public Iterator<K> iterator() {
-    return new MapKeyIterator<>(keys, 0, length);
+    return new MapKeyIterator<>(keys, 0, length - 1);
   }
 
   /* **************************************************************************
@@ -151,6 +184,18 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
   }
 
   /**
+   * Clear the map of all its key-value pairs.
+   * Sets it to its <em>default</em> state.
+   */
+  @Override
+  @SuppressWarnings("unchecked")
+  public void clear() {
+    keys = (K[]) new Object[INIT_CAPACITY];
+    vals = (V[]) new Object[INIT_CAPACITY];
+    length = 0;
+  }
+
+  /**
    * Return a shallow copy of the map.
    * A shallow copy creates a copy of the map but not of the keys and values in
    * the map.
@@ -183,7 +228,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    *                                  object is {@code null}.
    * @see #copy()
    */
-  public ArrayOrderMap<K, V> deepcopy(Function<KeyVal<? super K, ? super V>, KeyVal<? extends K, ? extends V>> copyFn) {
+  public ArrayOrderMap<K, V> deepcopy(Function<? super KeyVal<K, V>, KeyVal<K, V>> copyFn) {
     if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
 
     // add null check to `copyFn`
@@ -201,7 +246,6 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
 
     return cp;
   }
-
 
   /**
    * Get the value associated with {@code key} from the map.
@@ -315,7 +359,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public Iterable<KeyVal<K, V>> items() {
-    return () -> new MapKeyValIterator<>(keys, vals, 0, length);
+    return () -> new MapKeyValIterator<>(keys, vals, 0, length - 1);
   }
 
   /* **************************************************************************
@@ -519,17 +563,35 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    * Section: Helper Classes and Methods
    ************************************************************************** */
 
-  // TODO: write docs
+  /**
+   * Is the given index {@code i} a valid index of the internal array?
+   *
+   * @param i The index to validate.
+   * @return {@code true} if {@code i} is in range <code>[0, {@link #size()})</code>,
+   *     {@code false} otherwise.
+   */
   private boolean isInRange(int i) {
     return i >= 0 && i < length;
   }
 
-  // TODO: write docs
+  /**
+   * Binary search for {@code key} in the internal array.
+   *
+   * @param key The key to search for. Must NOT be {@code null}.
+   * @return The index at which {@code key} is located. If key doesn't exist,
+   *     then {@code -1} is returned.
+   */
   private int search(K key) {
     return Arrays.binarySearch(keys, 0, length, key, comp);
   }
 
-  // TODO: write docs
+  /**
+   * Get the index at which the ceiling of a given {@code key} is at.
+   *
+   * @param k The key to find the ceiling value of. Must NOT be {@code null}.
+   * @return The index of the ceiling of {@code key}, {@code -1} if key happens to be
+   *     the highest amongst the keys in the map.
+   */
   private int ceilIndex(K k) {
     int i = rank(k);
     if (isInRange(i)) {
@@ -539,7 +601,13 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     }
   }
 
-  // TODO: write docs
+  /**
+   * Get the index at which the floor of a given {@code key} is at.
+   *
+   * @param k The key to find the floor value of. Must NOT be {@code null}.
+   * @return The index of the floor of {@code key}, {@code -1} if key happens to be
+   *     the lowest amongst the keys in the map.
+   */
   private int floorIndex(K k) {
     int i = rank(k);
     if (isInRange(i) && compare(k, keys[i]) == 0) {
@@ -551,7 +619,15 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     }
   }
 
-  // TODO: write docs
+  /**
+   * A helper method for {@link #equals(Object obj) equals} method.
+   * Compares all the key-value pairs for equality, until a pair doesn't
+   * match or all match, whichever is first.
+   *
+   * @param map The {@link OrderMap} object to equate all elements with.
+   * @return {@code true} if all key-value pairs in {@code map} are equal to
+   *     key-value pairs in {@code this}, {@code false} otherwise.
+   */
   private boolean equalsForOrderMap(OrderMap<?, ?> map) {
     Iterator<? extends KeyVal<?, ?>> itor = map.items().iterator();
     for (KeyVal<K, V> kv : this.items()) {
@@ -562,7 +638,21 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     return true;
   }
 
-  // TODO: write docs
+  /**
+   * A helper method for {@link #equals(Object obj) equals} method.
+   * Compares all the key-value pairs for equality, until a pair doesn't
+   * match or all match, whichever is first.
+   *
+   * <p>
+   * Sometimes the key type in {@code this} and {@code map} may not be the same.
+   * In such cases, internally, a {@link ClassCastException} is thrown and caught,
+   * and {@code false} returned.
+   * </p>
+   *
+   * @param map The {@link Map} object to equate all elements with.
+   * @return {@code true} if all key-value pairs in {@code map} are equal to
+   *     key-value pairs in {@code this}, {@code false} otherwise.
+   */
   @SuppressWarnings("unchecked")
   private boolean equalsForMap(Map<?, ?> map) {
     try {
@@ -578,7 +668,22 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     }
   }
 
-  // TODO: write docs
+  /**
+   * Compare the keys {@code a} and {@code b}. If a comparator was provided at the
+   * time of construction, then it is used. Otherwise an attempt to cast the keys to
+   * {@link Comparable} is made. If the attempt fails, then a {@link IllegalStateException}
+   * is thrown.
+   *
+   * @param a Key to compare with {@code b}.
+   * @param b Key to compare with {@code a}.
+   * @return A number less than {@code 0} if {@code a < b}, {@code 0} if {@code a == b}
+   *     and greater than {@code 0} if {@code a > b}.
+   *
+   * @throws IllegalStateException If type {@link K Key} doesn't implement a natural order
+   * using the {@link Comparable} interface, nor was a {@link Comparator} provided.
+   *
+   * @see ArrayOrderMap ArrayOrderMap for details on IllegalStateException.
+   */
   @SuppressWarnings("unchecked")
   private int compare(K a, K b) {
     if (comp == null) {
@@ -626,7 +731,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     // TODO: write docs
     @Override
     public boolean hasNext() {
-      return current < stop;
+      return current <= stop;
     }
 
     // TODO: write docs
@@ -659,7 +764,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
 
     @Override
     public boolean hasNext() {
-      return current < stop;
+      return current <= stop;
     }
 
     @Override
