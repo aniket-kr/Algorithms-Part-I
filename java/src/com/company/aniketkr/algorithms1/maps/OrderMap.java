@@ -115,13 +115,20 @@ public interface OrderMap<K, V> extends Map<K, V> {
   boolean contains(K key);
 
   /**
+   * Clear the map of all its key-value pairs.
+   * Sets it to its <em>default</em> state.
+   */
+  @Override
+  void clear();
+
+  /**
    * Return a shallow copy of the map.
    * A shallow copy creates a copy of the map but not of the keys and values in
    * the map.
    *
    * @return A shallow copy of the map.
    *
-   * @see #deepcopy(Function copyFn)
+   * @see Map#deepcopy(Function)
    */
   @Override
   Map<K, V> copy();
@@ -140,7 +147,7 @@ public interface OrderMap<K, V> extends Map<K, V> {
    *                                  object is {@code null}.
    * @see #copy()
    */
-  Map<K, V> deepcopy(Function<KeyVal<? super K, ? super V>, KeyVal<? extends K, ? extends V>> copyFn);
+  Map<K, V> deepcopy(Function<? super KeyVal<K, V>, KeyVal<K, V>> copyFn);
 
 
   /**

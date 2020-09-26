@@ -102,6 +102,12 @@ public interface Map<K, V> extends Iterable<K> {
   boolean contains(K key);
 
   /**
+   * Clear the map of all its key-value pairs.
+   * Sets it to its <em>default</em> state.
+   */
+  void clear();
+
+  /**
    * Return a shallow copy of the map.
    * A shallow copy creates a copy of the map but not of the keys and values in
    * the map.
@@ -126,7 +132,7 @@ public interface Map<K, V> extends Iterable<K> {
    *                                  object is {@code null}.
    * @see #copy()
    */
-  Map<K, V> deepcopy(Function<KeyVal<? super K, ? super V>, KeyVal<? extends K, ? extends V>> copyFn);
+  Map<K, V> deepcopy(Function<? super KeyVal<K, V>, KeyVal<K, V>> copyFn);
 
   /**
    * Get the value associated with {@code key} from the map.
@@ -206,6 +212,11 @@ public interface Map<K, V> extends Iterable<K> {
       KeyVal<?, ?> that = (KeyVal<?, ?>) obj;
 
       return Objects.equals(this.key, that.key) && Objects.equals(this.val, that.val);
+    }
+
+    @Override
+    public String toString() {
+      return String.format("(%s: %s)", key, val);
     }
 
     public K key() {
