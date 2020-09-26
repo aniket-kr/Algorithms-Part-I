@@ -9,17 +9,46 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 
-// TODO: code completed, docs under construction
 
-
-// TODO: add javadoc
+/**
+ * Implements the {@link OrderMap} interface using an internal resizing array.
+ * If nothing is explicitly specified, then the default capacity of the arrays
+ * is {@value INIT_CAPACITY}. The size of the array increases (or decreases)
+ * by a factor of 2.
+ *
+ * <p>
+ * Most operations in the implementation take logarithmic or linear time; some
+ * take constant time. <br>
+ *
+ * <b>Logarithmic Time</b> - <em>get</em>, <em>put</em> (amortized), <em>delete</em>,
+ * <em>rank</em>, <em>get-the-floor</em> and <em>get-the-ceiling</em> operations take
+ * time proportional to <code>&theta;(log<sub>2</sub>n)</code>. <br>
+ *
+ * <b>Linear Time</b> - <em>equals</em> (worst case), <em>copy</em>, <em>deepcopy</em>
+ * and <em>delete-the-minimum</em> operations take time proportional to <code>&theta;(n)
+ * </code>. <br>
+ *
+ * <b>Constant Time</b> - All other operations take constant time.
+ * </p>
+ *
+ * <p>
+ * The implementation provided 3 methods (4 operations incl. overloads) to iterate over
+ * the keys and key-value pairs in the map. The <em>keys</em> and the <em>iterator</em>
+ * methods iterate over the keys of the map, while the <em>items</em> method (& overload)
+ * iterate over the key-value pairs in the map. Both iterate in increasing order of keys.
+ * </p>
+ *
+ * @param <K> The type of key in the map.
+ * @param <V> The type of value in the map.
+ * @author Aniket Kumar
+ */
 public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
-  private static final int INIT_CAPACITY = 8;     // default capacity of internal arrays
+  private static final int INIT_CAPACITY = 8;  // default capacity of internal arrays
 
-  private final Comparator<K> comp;               // Comparator to use, if needed
-  private K[] keys;                               // holds the keys
-  private V[] vals;                               // holds the values
-  private int length = 0;                         // number of key-value pairs
+  private final Comparator<K> comp;            // Comparator to use, if needed
+  private K[] keys;                            // holds the keys
+  private V[] vals;                            // holds the values
+  private int length = 0;                      // number of key-value pairs
 
   /**
    * Initialize and return an empty ArrayOrderMap object and assumes that
@@ -92,7 +121,6 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public boolean equals(Object obj) {
-    // TODO: reformat code
     if (this == obj)                return true;
     if (obj == null)                return false;
     if (!(obj instanceof Map))      return false;
@@ -680,8 +708,8 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    *     and greater than {@code 0} if {@code a > b}.
    *
    * @throws IllegalStateException If type {@link K Key} doesn't implement a natural order
-   * using the {@link Comparable} interface, nor was a {@link Comparator} provided.
-   *
+   *                               using the {@link Comparable} interface, nor was a
+   *                               {@link Comparator} provided.
    * @see ArrayOrderMap ArrayOrderMap for details on IllegalStateException.
    */
   @SuppressWarnings("unchecked")
@@ -697,13 +725,28 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     return comp.compare(a, b);
   }
 
-  // TODO: write docs
+  /**
+   * Shift the elements of the internal arrays (both {@link #keys} and {@link #vals})
+   * over by {@code by} places. The shifting of the elements starts from the index
+   * {@code fromIndex} (inclusive). Assumes that the internal arrays have enough space
+   * to accommodate the "shifting".
+   *
+   * @param fromIndex The index to start shifting from (inclusive).
+   * @param by        The number of position to shift elements by.
+   */
   private void shift(int fromIndex, int by) {
     System.arraycopy(keys, fromIndex, keys, fromIndex + by, length - fromIndex);
     System.arraycopy(vals, fromIndex, vals, fromIndex + by, length - fromIndex);
   }
 
-  // TODO: write docs
+  /**
+   * Resize the internal {@link #keys} and {@link #vals} arrays to have capacity to
+   * hold {@code newSize} elements.
+   * Resizing is achieved by creating new arrays, copying over the elements from
+   * the original arrays, and then replacing the original array with the new arrays.
+   *
+   * @param newSize The desired capacity of the new arrays.
+   */
   @SuppressWarnings("unchecked")
   private void resize(int newSize) {
     K[] newKeys = (K[]) new Object[newSize];
@@ -715,26 +758,46 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     vals = newVals;
   }
 
-  // TODO: write docs
+  /**
+   * A static {@link Iterator} class that iterates over the keys of the map.
+   *
+   * @param <K> The type of key in the map.
+   */
   private static class MapKeyIterator<K> implements Iterator<K> {
     private final K[] keys;     // array of keys
-    private final int stop;     // stop before this index (exclusive)
-    private int current;        // start at this index (inclusive)
+    private final int stop;     // stop before this index (inclusive)
+    private int current;        // start at this index (inclusive), represents the current index
 
-    // TODO: write docs
+    /**
+     * Initialize and return a new MapKeyIterator object.
+     *
+     * @param keys  The array of keys.
+     * @param start The index to start iterating from (inclusive).
+     * @param stop  The index to stop iterating at (inclusive).
+     */
     private MapKeyIterator(K[] keys, int start, int stop) {
       this.keys = keys;
       this.current = start;
       this.stop = stop;
     }
 
-    // TODO: write docs
+    /**
+     * Can the iterator produce another key to return?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code true} otherwise.
+     */
     @Override
     public boolean hasNext() {
       return current <= stop;
     }
 
-    // TODO: write docs
+    /**
+     * Produce the next key from the map and return it.
+     *
+     * @return The next key.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
     @Override
     public K next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
@@ -742,19 +805,39 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
       return keys[current++];
     }
 
-    // TODO: write docs
+    /**
+     * Remove not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
     @Override
     public void remove() {
       throw new UnsupportedOperationException("remove() not supported");
     }
   }
 
+  /**
+   * A static {@link Iterator} class that iterates over the key-value pairs of a map.
+   * The key-value pairs are iterated over as {@link KeyVal} objects.
+   *
+   * @param <K> The type of key in the map.
+   * @param <V> The type of value in the map.
+   */
   private static class MapKeyValIterator<K, V> implements Iterator<KeyVal<K, V>> {
-    private final K[] keys;
-    private final V[] vals;
-    private final int stop;
-    private int current;
+    private final K[] keys;   // keys array of the map
+    private final V[] vals;   // values array of the map
+    private final int stop;   // stop at this index (inclusive)
+    private int current;      // initialised to start (inclusive), represents the current index
 
+    /**
+     * Initialize and return a new MapKeyValIterator object.
+     *
+     * @param keys  The array of keys of the map.
+     * @param vals  The array of values of the map, synchronised with the keys such that
+     *              {@code keys[i]} should have value {@code vals[i]}.
+     * @param start The index to start iterating from (inclusive).
+     * @param stop  The index to stop iterating at (inclusive).
+     */
     private MapKeyValIterator(K[] keys, V[] vals, int start, int stop) {
       this.keys = keys;
       this.vals = vals;
@@ -762,11 +845,23 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
       this.stop = stop;
     }
 
+    /**
+     * Can the iterator produce another key-value pair and return it?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code true} otherwise.
+     */
     @Override
     public boolean hasNext() {
       return current <= stop;
     }
 
+    /**
+     * Produce the next key-value pair from the map and return it.
+     *
+     * @return The next key-value pair as an immutable {@link KeyVal} object.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
     @Override
     public KeyVal<K, V> next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
@@ -774,6 +869,11 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
       return new KeyVal<>(keys[current], vals[current++]);
     }
 
+    /**
+     * Remove not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
     @Override
     public void remove() {
       throw new UnsupportedOperationException("remove() not supported");
