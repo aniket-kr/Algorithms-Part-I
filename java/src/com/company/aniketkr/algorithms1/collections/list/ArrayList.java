@@ -5,7 +5,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 
-// FIXME: under construction
 
 /**
  * Implements the {@link List} interface using an internal resizing array.
@@ -13,10 +12,25 @@ import java.util.function.Function;
  * nothing is explicitly specified. This array is guaranteed to be between 25% to
  * 100% full at all times. The size of the array increases (or decreases) by a factor
  * of 2.
- * <p>
- * // TODO: write about method performance here.
  *
- * @param <E> The type of the elements in the list.
+ * <p>
+ * The operations to <em>add</em> and <em>delete</em> take constant amortized time. Their
+ * extensions - <em>add-all</em>, <em>insert</em>, <em>insert-all</em>, <em>remove</em>
+ * take time proportional to <code>&theta;(n)</code>. The <em>contains</em>, <em>equals</em>,
+ * <em>copy</em> and <em>deepcopy</em> operations take <code>&theta;(n)</code> time. The
+ * <em>get</em> and <em>set</em> operations take constant time. All other operations take
+ * constant time.
+ * </p>
+ *
+ * <p>
+ * Apart from all the operations defined in {@link List}, this implementation defines a
+ * powerful <em>range</em> operation for iteration, alongside the {@code iterator} method
+ * from {@link Iterable} interface. The <em>range</em> operation puts to use the fact that
+ * the underlying structure for storage is an array, and allows flexible and versatile
+ * iteration.
+ * </p>
+ *
+ * @param <E> The type of the element in the list.
  * @author Aniket Kumar
  */
 public final class ArrayList<E> implements List<E> {
@@ -319,8 +333,23 @@ public final class ArrayList<E> implements List<E> {
     if (!isInRange(fromIndex)) throw new IndexOutOfBoundsException("invalid index: " + fromIndex);
     if (elmts == null) throw new IllegalArgumentException("2nd argument to insertAll() is null");
 
-    // FIXME: don't currently understand how to "EFFICIENTLY" insert when final length is
-    //  not available
+    ArrayList<E> aux = new ArrayList<>();
+    aux.addAll(elmts);
+
+    /* NOTE:
+         The following section is basically code for insertAll() with an array.
+         The only difference is that the end of the array does not define the
+         end of the elements to insert, the `size()` property of the `aux`
+         auxiliary ArrayList object is.
+     */
+    int expectedSize = calcCapacity(aux.size());
+    if (expectedSize > this.arr.length) {
+      resize(expectedSize);
+    }
+
+    shift(fromIndex, aux.size());
+    System.arraycopy(aux.arr, 0, this.arr, fromIndex, aux.size());
+    length += aux.size();
   }
 
   /**
@@ -641,9 +670,11 @@ public final class ArrayList<E> implements List<E> {
       if (step < 0) {
         current = high;
         stop = low;
+        return;
       } else if (step > 0) {
         current = low;
         stop = high;
+        return;
       }
 
       throw new IllegalArgumentException("invalid step (= 0)");
