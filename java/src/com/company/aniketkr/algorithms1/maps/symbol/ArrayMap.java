@@ -7,10 +7,27 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 
-// FIXME: code complete, javadoc pending
 
-// TODO: write javadoc
-public class ArrayMap<K, V> implements Map<K, V> {
+/**
+ * Implements the {@link Map} interface using internal resizing array that is <b>unordered</b>.
+ * As specified by {@code Map}, the only methods required to be implemented by the
+ * {@link K Key} type is {@link Object#equals(Object obj) equals} method that is used fro actual
+ * comparison. If nothing is explicitly specified in the constructor, the default capacity of
+ * the map is {@value INIT_CAPACITY}. The size of the internal array(s) increases (or decreases)
+ * by a factor of {@code 2}.
+ *
+ * <p>
+ * Most methods in this implementation - including <em>put</em>, <em>get</em>, <em>delete</em>
+ * and <em>contains</em>, take time proportional to <code>&theta;(n)</code>. Additionally, the
+ * <em>equals</em> method may take <code>O(n<sup>2</sup>)</code> time in the worst case.
+ * </p>
+ *
+ * @param <K> The type of key in the map. MUST implement the
+ *            {@link Object#equals(Object obj) equals} method.
+ * @param <V> The type of value in the map.
+ * @author Aniket Kumar
+ */
+public final class ArrayMap<K, V> implements Map<K, V> {
   private static final int INIT_CAPACITY = 8;   // default capacity of ArrayMap
 
   private int length = 0;                       // number of key-value pairs in map
@@ -55,7 +72,6 @@ public class ArrayMap<K, V> implements Map<K, V> {
   @Override
   @SuppressWarnings("unchecked")
   public boolean equals(Object obj) {
-    // TODO: reformat code
     if (this == obj)                return true;
     if (obj == null)                return false;
     if (!(obj instanceof Map))      return false;
