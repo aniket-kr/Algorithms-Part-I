@@ -184,28 +184,26 @@ public interface OrderMap<K, V> extends Map<K, V> {
    *
    * @param key The key to add/update in the map to have {@code val} as associated value.
    * @param val The value to associate with {@code key}.
+   * @return {@code true} if {@code key} was added to the map, {@code false} if the key
+   *     already existed in the map and its associated value was updated.
+   *
    * @throws IllegalArgumentException If {@code key} is {@code null}.
    */
   @Override
-  void put(K key, V val);
+  boolean put(K key, V val);
 
   /**
    * Delete the given {@code key} and its associated value from the map.
    * If {@code key} does not exist in the map, then simply returns - no exception is thrown.
    *
    * @param key The key in the key-value pair to delete.
+   * @return {@code true} if {@code key} existed in the map and was deleted, {@code false}
+   *     otherwise.
+   *
    * @throws IllegalArgumentException If {@code key} is {@code null}.
    */
   @Override
-  void del(K key);
-
-  /**
-   * Get the {@code Comparator} object being user for comparing keys.
-   *
-   * @return The comparator being used to compare keys. If the natural order defined by
-   * the {@link Comparable} interface is being used then returns {@code null}.
-   */
-  Comparator<K> comparator();
+  boolean del(K key);
 
   /**
    * Get an iterable object that iterates over the key-value pairs packed together in an
@@ -297,6 +295,14 @@ public interface OrderMap<K, V> extends Map<K, V> {
   K select(int rank);
 
   /**
+   * Get the {@code Comparator} object being user for comparing keys.
+   *
+   * @return The comparator being used to compare keys. If the natural order defined by
+   *     the {@link Comparable} interface is being used then returns {@code null}.
+   */
+  Comparator<K> comparator();
+
+  /**
    * Delete the key with the lowest priority in the map.
    *
    * @throws NoSuchElementException If called on an empty map.
@@ -331,6 +337,7 @@ public interface OrderMap<K, V> extends Map<K, V> {
    * @param low  Iteration will start with the ceiling of this key.
    * @param high Iteration will end with the floor of this key.
    * @return An iterable.
+   *
    * @throws IllegalArgumentException If either {@code low} or {@code high} are {@code null}.
    */
   Iterable<Map.KeyVal<K, V>> items(K low, K high);

@@ -1,6 +1,5 @@
 package com.company.aniketkr.algorithms1.maps;
 
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Function;
@@ -164,24 +163,21 @@ public interface Map<K, V> extends Iterable<K> {
    *
    * @param key The key to add/update in the map to have {@code val} as associated value.
    * @param val The value to associate with {@code key}.
+   * @return {@code true} if a new key was added, {@code false} if {@code key} already existed
+   *     in the map.
    */
-  void put(K key, V val);
+  boolean put(K key, V val);
 
   /**
    * Delete the given {@code key} and its associated value from the map.
-   * If {@code key} does not exist in the map, then simply returns - no exception is thrown.
+   * If {@code key} does not exist in the map, then simply returns {@code false} - no
+   * exception is thrown.
    *
    * @param key The key in the key-value pair to delete.
+   * @return {@code true} if {@code key} existed in the map and was deleted, {@code false}
+   *     otherwise.
    */
-  void del(K key);
-
-  /**
-   * Get the {@code Comparator} object being user for comparing keys.
-   *
-   * @return The comparator being used to compare keys. If the natural order defined by
-   *     the {@link Comparable} interface is being used then returns {@code null}.
-   */
-  Comparator<K> comparator();
+  boolean del(K key);
 
   /**
    * Get an iterable object that iterates over the key-value pairs packed together in an
