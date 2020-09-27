@@ -121,11 +121,11 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    */
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)                return true;
-    if (obj == null)                return false;
-    if (!(obj instanceof Map))      return false;
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!(obj instanceof Map)) return false;
     Map<?, ?> map = (Map<?, ?>) obj;
-    if (this.size() != map.size())  return false;
+    if (this.size() != map.size()) return false;
 
     // compare all keys and values
     if (obj instanceof OrderMap) {
@@ -321,10 +321,13 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    *
    * @param key The key to add/update in the map to have {@code val} as associated value.
    * @param val The value to associate with {@code key}.
+   * @return {@code true} if a new key was added, {@code false} if {@code key} already existed
+   *     in the map.
+   *
    * @throws IllegalArgumentException If {@code key} is {@code null}.
    */
   @Override
-  public void put(K key, V val) {
+  public boolean put(K key, V val) {
     if (key == null) throw new IllegalArgumentException("1st argument to set() is null");
 
     int i = rank(key);
@@ -332,7 +335,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     // if `key` already exists
     if (isInRange(i) && compare(keys[i], key) == 0) {
       vals[i] = val;
-      return;
+      return false;
     }
 
     // if `key` doesn't exist
@@ -344,6 +347,7 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     keys[i] = key;
     vals[i] = val;
     length++;
+    return true;
   }
 
   /**
@@ -351,32 +355,28 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
    * If {@code key} does not exist in the map, then simply returns - no exception is thrown.
    *
    * @param key The key in the key-value pair to delete.
+   * @return {@code true} if {@code key} existed in the map and was deleted, {@code false}
+   *     otherwise.
+   *
    * @throws IllegalArgumentException If {@code key} is {@code null}.
    */
   @Override
-  public void del(K key) {
+  public boolean del(K key) {
     if (key == null) throw new IllegalArgumentException("argument to del() is null");
     if (size() == keys.length / 4) {
       resize(keys.length / 2);
     }
 
     int i = search(key);
-    if (i >= 0) {
+    boolean doesExist = i >= 0;
+    if (doesExist) {
       shift(i + 1, -1);
       length--;
       keys[length] = null;
       vals[length] = null;
     }
-  }
 
-  /**
-   * Get the {@code Comparator} object being user for comparing keys.
-   *
-   * @return The comparator being used to compare keys. If the natural order defined by
-   *     the {@link Comparable} interface is being used then returns {@code null}.
-   */
-  public Comparator<K> comparator() {
-    return comp;
+    return doesExist;
   }
 
   /**
@@ -520,6 +520,17 @@ public class ArrayOrderMap<K, V> implements OrderMap<K, V> {
     if (!(isInRange(rank) || rank == size())) throw new IllegalArgumentException("no key with rank " + rank);
 
     return keys[rank];
+  }
+
+  /**
+   * Get the {@code Comparator} object being user for comparing keys.
+   *
+   * @return The comparator being used to compare keys. If the natural order defined by
+   *     the {@link Comparable} interface is being used then returns {@code null}.
+   */
+  @Override
+  public Comparator<K> comparator() {
+    return comp;
   }
 
   /**
