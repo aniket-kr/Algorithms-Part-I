@@ -7,22 +7,32 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Function;
 
-// FIXME: code under MAJOR construction
+// FIXME: code complete, javadoc pending
 
 // TODO: write javadoc
 public class ArrayMap<K, V> implements Map<K, V> {
-  private static final int INIT_CAPACITY = 8;
+  private static final int INIT_CAPACITY = 8;   // default capacity of ArrayMap
 
-  private int length = 0;
-  private K[] keys;
-  private V[] vals;
+  private int length = 0;                       // number of key-value pairs in map
+  private K[] keys;                             // array that hold keys
+  private V[] vals;                             // array that hold corresponding values.
 
-  // TODO: add ctor docs and comments for fields
+  /**
+   * Initialize and return an empty ArrayMap object.
+   * The default capacity is {@value INIT_CAPACITY}.
+   */
   public ArrayMap() {
     this(INIT_CAPACITY);
   }
 
-  // TODO: docs
+  /**
+   * Initialize and return an empty ArrayMap object that has the capacity to
+   * hold {@code capacity} key-value pairs.
+   *
+   * @param capacity The desired number of key-value pairs that the map should be able
+   *                 to hold without having to resize.
+   * @throws IllegalArgumentException If {@code capacity} is less than or equal to {@code 0}.
+   */
   @SuppressWarnings("unchecked")
   public ArrayMap(int capacity) {
     if (capacity <= 0) throw new IllegalArgumentException("invalid capacity: " + capacity);
@@ -43,8 +53,27 @@ public class ArrayMap<K, V> implements Map<K, V> {
    *     {@code false} otherwise.
    */
   @Override
+  @SuppressWarnings("unchecked")
   public boolean equals(Object obj) {
-    return super.equals(obj);
+    // TODO: reformat code
+    if (this == obj)                return true;
+    if (obj == null)                return false;
+    if (!(obj instanceof Map))      return false;
+    Map<?, ?> that = (Map<?, ?>) obj;
+    if (this.size() != that.size()) return false;
+
+    // compare all elements
+    try {
+      for (KeyVal<?, ?> kv : that.items()) {
+        if (!this.get((K) kv.key()).equals(kv.val())) {
+          return false;
+        }
+      }
+      return true;
+
+    } catch (ClassCastException exc) {
+      return false;
+    }
   }
 
   /**
@@ -141,7 +170,12 @@ public class ArrayMap<K, V> implements Map<K, V> {
    */
   @Override
   public Map<K, V> copy() {
-      return null;    // TODO: impl method copy()
+    ArrayMap<K, V> cp = new ArrayMap<>((size() >= 2) ? (size() * 2) : INIT_CAPACITY);
+    System.arraycopy(this.keys, 0, cp.keys, 0, this.size());
+    System.arraycopy(this.vals, 0, cp.vals, 0, this.size());
+    cp.length = this.length;
+
+    return cp;
   }
 
   /**
@@ -160,7 +194,15 @@ public class ArrayMap<K, V> implements Map<K, V> {
    */
   @Override
   public Map<K, V> deepcopy(Function<? super KeyVal<K, V>, KeyVal<K, V>> copyFn) {
-    return null;     // TODO: impl method deepcopy()
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
+
+    ArrayMap<K, V> cp = new ArrayMap<>((size() >= 2) ? (size() * 2) : INIT_CAPACITY);
+    this.items().forEach(kv -> {
+      KeyVal<K, V> kvCopy = copyFn.apply(kv);
+      cp.put(kvCopy.key(), kvCopy.val());
+    });
+
+    return cp;
   }
 
   /**
@@ -274,7 +316,14 @@ public class ArrayMap<K, V> implements Map<K, V> {
    * Section: Helper Classes and Methods
    ************************************************************************** */
 
-  // TODO: write docs
+  /**
+   * Resize the internal arrays (both {@code keys} and {@code vals}) to have capacity
+   * to hold {@code newSize} key-value pairs.
+   * Resizing is achieved by adding by creating new arrays, copying over elements from
+   * original arrays and replacing the original arrays with new ones.
+   *
+   * @param newSize The desired number of key-value pairs the map should be able to hold.
+   */
   @SuppressWarnings("unchecked")
   private void resize(int newSize) {
     V[] newVals = (V[]) new Object[newSize];
@@ -286,31 +335,56 @@ public class ArrayMap<K, V> implements Map<K, V> {
     keys = newKeys;
   }
 
-  // TODO: write docs
+  /**
+   * Shift the key-value pairs, in both arrays, left by 1 place, starting index
+   * {@code fromIndex} (inclusive).
+   *
+   * @param fromIndex The index to start shifting from (inclusive).
+   */
   private void shiftLeft(int fromIndex) {
     System.arraycopy(vals, fromIndex, vals, fromIndex - 1, size() - fromIndex);
     System.arraycopy(keys, fromIndex, keys, fromIndex - 1, size() - fromIndex);
   }
 
-  // TODO: write docs
+  /**
+   * A static {@link Iterator} class that iterates over the keys of the given map.
+   *
+   * @param <K> The type of key in the map.
+   */
   private static class MapKeyIterator<K> implements Iterator<K> {
     private final K[] keys;     // array holding keys
     private final int stop;     // stop at this index (inclusive)
     private int current = 0;    // iterate over this index next
 
-    // TODO: write docs
+    /**
+     * Initialize and return a new MapKeyIterator object that iterates over all the elements
+     * in the array {@code keys}, starting from {@code 0} upto, and including, {@code stop}.
+     *
+     * @param keys The array holding the keys.
+     * @param stop The index to stop at (inclusive).
+     */
     private MapKeyIterator(K[] keys, int stop) {
       this.keys = keys;
       this.stop = stop;
     }
 
-    // TODO: write docs
+    /**
+     * Can the iterator produce another key to return?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code true} otherwise.
+     */
     @Override
     public boolean hasNext() {
       return current <= stop;
     }
 
-    // TODO: write docs
+    /**
+     * Produce the next key from the iterator and return it.
+     *
+     * @return The next key.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
     @Override
     public K next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
@@ -318,34 +392,62 @@ public class ArrayMap<K, V> implements Map<K, V> {
       return keys[current++];
     }
 
-    // TODO: write docs
+    /**
+     * Remove not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
     @Override
     public void remove() {
       throw new UnsupportedOperationException("remove() not supported");
     }
   }
 
-  // TODO: write docs
+  /**
+   * A static {@link Iterator} class that iterates over the key-value pairs in the
+   * given map.
+   *
+   * @param <K> The type of key in the map.
+   * @param <V> The type of value in the map.
+   */
   private static class MapKeyValIterator<K, V> implements Iterator<KeyVal<K, V>> {
     private final K[] keys;     // array holding keys
     private final V[] vals;     // array holding vals
     private final int stop;     // stop at this index (inclusive)
     private int current = 0;    // iterate over this index next
 
-    // TODO: write docs
+    /**
+     * Initialize and return a new MapKeyValIterator object, that iterates over the
+     * key-value pairs of the map as immutable {@link KeyVal} objects.
+     *
+     * @param keys The array that holds the keys.
+     * @param vals The array that holds the values, such that for a key at {@code keys[i]},
+     *             its associated value is at {@code vals[i]}.
+     * @param stop Iterate upto this index (inclusive).
+     */
     private MapKeyValIterator(K[] keys, V[] vals, int stop) {
       this.keys = keys;
       this.vals = vals;
       this.stop = stop;
     }
 
-    // TODO: write docs
+    /**
+     * Can the iterator produce another key-value pair to return?
+     *
+     * @return {@code false} if the iterator has been depleted, {@code true} otherwise.
+     */
     @Override
     public boolean hasNext() {
       return current <= stop;
     }
 
-    // TODO: write docs
+    /**
+     * Produce the next key-value pair from the iterator and return it.
+     *
+     * @return The next key-value pair.
+     *
+     * @throws NoSuchElementException If called on a depleted iterator.
+     */
     @Override
     public KeyVal<K, V> next() {
       if (!hasNext()) throw new NoSuchElementException("iterator depleted");
@@ -353,7 +455,11 @@ public class ArrayMap<K, V> implements Map<K, V> {
       return new KeyVal<>(keys[current], vals[current++]);
     }
 
-    // TODO: write docs
+    /**
+     * Remove not supported. Throws UOE.
+     *
+     * @throws UnsupportedOperationException Always.
+     */
     @Override
     public void remove() {
       throw new UnsupportedOperationException("remove() not supported");
