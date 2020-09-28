@@ -1,7 +1,9 @@
 package com.company.aniketkr.algorithms1.maps.hash;
 
 import com.company.aniketkr.algorithms1.maps.Map;
+import com.company.aniketkr.algorithms1.maps.symbol.ArrayMap;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
@@ -52,7 +54,16 @@ public class ChainingHashMap<K, V> implements Map<K, V> {
 
   @Override
   public String toString() {
-    return super.toString();
+    return "ChainingHashMap{" + "map=" + Arrays.toString(map) + ", length=" + length + '}';
+
+    // String className = this.getClass().getSimpleName();
+    //
+    // if (isEmpty()) return className + "[0] {  }";
+    //
+    // StringBuilder sb = new StringBuilder(className).append("[").append(size()).append("] { ");
+    // this.items().forEach(kv -> sb.append(kv.key()).append(": ").append(kv.val()).append(", "));
+    // sb.setLength(sb.length() - 2);
+    // return sb.append(" }").toString();
   }
 
   /* **************************************************************************
@@ -68,7 +79,7 @@ public class ChainingHashMap<K, V> implements Map<K, V> {
    */
   @Override
   public Iterator<K> iterator() {
-    return null;
+    return new ChainingKeyIterator();
   }
 
   /* **************************************************************************
@@ -135,7 +146,19 @@ public class ChainingHashMap<K, V> implements Map<K, V> {
    */
   @Override
   public Map<K, V> copy() {
-    return null;
+    ChainingHashMap<K, V> cp = new ChainingHashMap<>(size());
+
+    int i = 0;
+    Map<K, V> bucket;
+    while (cp.size() < this.size()) {
+      bucket = this.map[i];
+      if (bucket != null) {
+        cp.map[i] = bucket.copy();
+        cp.length += bucket.size();
+      }
+    }
+
+    return cp;
   }
 
   /**
@@ -154,7 +177,15 @@ public class ChainingHashMap<K, V> implements Map<K, V> {
    */
   @Override
   public Map<K, V> deepcopy(Function<? super KeyVal<K, V>, KeyVal<K, V>> copyFn) {
-    return null;
+    if (copyFn == null) throw new IllegalArgumentException("argument to deepcopy() is null");
+
+    ChainingHashMap<K, V> cp = new ChainingHashMap<>((size() >= 2) ? (size() * 2) : INIT_CAPACITY);
+    this.items().forEach(kv -> {
+      KeyVal<K, V> kvCopy = copyFn.apply(kv);
+      cp.put(kvCopy.key(), kvCopy.val());
+    });
+
+    return cp;
   }
 
   /**
@@ -205,6 +236,10 @@ public class ChainingHashMap<K, V> implements Map<K, V> {
    */
   @Override
   public boolean put(K key, V val) {
+    if (size() == map.length) {
+      rehash(map.length * 2);
+    }
+
     int i = hash(key);
     if (map[i] == null) {
       map[i] = new ArrayMap<>(4);
@@ -227,6 +262,10 @@ public class ChainingHashMap<K, V> implements Map<K, V> {
    */
   @Override
   public boolean del(K key) {
+    if (size() == map.length / 4) {
+      rehash(map.length / 2);
+    }
+
     int i = hash(key);
 
     // bucket does not exist = key can't exist
@@ -251,7 +290,7 @@ public class ChainingHashMap<K, V> implements Map<K, V> {
    */
   @Override
   public Iterable<KeyVal<K, V>> items() {
-    return null;
+    return ChainingKeyValIterator::new;
   }
 
   /* **************************************************************************
@@ -269,5 +308,104 @@ public class ChainingHashMap<K, V> implements Map<K, V> {
     ChainingHashMap<K, V> newMap = new ChainingHashMap<>(newSize);
     this.items().forEach(kv -> newMap.put(kv.key(), kv.val()));
     this.map = newMap.map;
+  }
+
+  // TODO: write docs
+  private class ChainingKeyIterator implements Iterator<K> {
+    private int current = 0;
+    private Iterator<K> bucketItor = null;
+    private int iteratedCount = 0;
+
+    // TODO: write docs
+    private ChainingKeyIterator() {
+      while (current < map.length) {
+        if (map[current] != null) {
+          bucketItor = map[current++].iterator();
+          break;
+        }
+        current++;
+      }
+    }
+
+    // TODO: write docs
+    @Override
+    public boolean hasNext() {
+      return iteratedCount < size();
+    }
+
+    // TODO: write docs
+    @Override
+    public K next() {
+      if (!hasNext()) throw new NoSuchElementException("iterator depleted");
+
+      // make sure `bucket` has next
+      if (!bucketItor.hasNext()) {
+        while (current < map.length) {
+          if (map[current] != null) {
+            bucketItor = map[current++].iterator();
+            break;
+          }
+          current++;
+        }
+      }
+
+      iteratedCount++;
+      return bucketItor.next();
+    }
+
+    // TODO: write docs
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException("remove() not supported");
+    }
+  }
+
+  private class ChainingKeyValIterator implements Iterator<KeyVal<K, V>> {
+    private int current = 0;
+    private Iterator<KeyVal<K, V>> bucketItor = null;
+    private int iteratedCount = 0;
+
+    // TODO: write docs
+    private ChainingKeyValIterator() {
+      while (current < map.length) {
+        if (map[current] != null) {
+          bucketItor = map[current++].items().iterator();
+          break;
+        }
+        current++;
+      }
+    }
+
+    // TODO: write docs
+    @Override
+    public boolean hasNext() {
+      return iteratedCount < size();
+    }
+
+    // TODO: write docs
+    @Override
+    public KeyVal<K, V> next() {
+      if (!hasNext()) throw new NoSuchElementException("iterator depleted");
+
+      // make sure `bucket` has next
+      if (!bucketItor.hasNext()) {
+        while (current < map.length) {
+          if (map[current] != null) {
+            bucketItor = map[current++].items().iterator();
+            break;
+          }
+          current++;
+        }
+      }
+
+      iteratedCount++;
+      return bucketItor.next();
+    }
+
+    // TODO: write docs
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException("remove() not supported");
+    }
   }
 }
