@@ -1,8 +1,5 @@
 # Algorithms, Part I
 
-> **The Data structures in this project are untested (yet) and 
-> under major construction. DO NOT USE!**
-
 This repo contains implementations for all data structures and associated
 algorithms that I have learnt from [Algorithms, Part I](https://www.coursera.org/learn/algorithms-part1)
 on Coursera.
